@@ -17,8 +17,8 @@ const PersistAuth = () => {
   useEffect(() => {
     const handleUser = async () => {
       try {
-        // const { data } = await axios.get('/api/refres');
-        // setAuth(data);
+        const { data } = await axios.get('/api/refres');
+        setAuth(data);
         // console.log(data.name);
         setIsLoading(false);
       } catch (error) {
