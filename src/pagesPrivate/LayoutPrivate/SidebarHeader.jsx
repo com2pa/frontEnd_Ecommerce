@@ -37,8 +37,11 @@ const LinkItems = [
   { name: 'Home', icon: FiHome, to: '/dashboard' },
   { name: 'Crear Categoria', icon: LuSchool, to: '/category' },
   { name: 'Crear Subcategoria', icon: LuBookMinus, to: '/subcategory' },
-  { name: '3', icon: GiTeacher, to: '#' },
-  { name: '4', icon: IoMdPersonAdd, to: '#' },
+  { name: 'Crear Alicuotas', icon: GiTeacher, to: '/aliquots' },
+  { name: 'Marca', icon: IoMdPersonAdd, to: '/brand' },
+  { name: 'Producto', icon: IoMdPersonAdd, to: '/product' },
+  { name: '5', icon: IoMdPersonAdd, to: '#' },
+  { name: '6', icon: IoMdPersonAdd, to: '#' },
 ];
 
 
