@@ -25,6 +25,8 @@ import {
   Textarea,
   Select,
   Spinner,
+  FormErrorMessage,
+  useDisclosure,
 } from '@chakra-ui/react';
 import axios from 'axios';
 import {
@@ -35,23 +37,32 @@ import {
   FaBoxes,
   FaExclamationTriangle,
   FaInfoCircle,
+  FaImage,
 } from 'react-icons/fa';
 import ProductCard from './ProductCart';
+import DeleteConfirmationModal from '../components/DeleteConfirmationModal';
 
 const Product = () => {
+  const {
+    isOpen: isDeleteDialogOpen,
+    onOpen: onDeleteDialogOpen,
+    onClose: onDeleteDialogClose,
+  } = useDisclosure();
+  const [productToDelete, setProductToDelete] = useState(null);
   const [formData, setFormData] = useState({
     name: '',
     description: '',
-    price: 0,
-    stock: 0,
+    price: 1,
+    stock: 1,
     unit: '',
     unitsPerPackage: 1,
-    minStock: 0,
+    minStock: 1,
     sku: '',
     isActive: true,
     subcategoryId: '',
     brandId: '',
     aliquotId: '',
+    prodImage: null,
   });
 
   const [brands, setBrands] = useState([]);
@@ -60,6 +71,10 @@ const Product = () => {
   const [products, setProducts] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
+  const [errors, setErrors] = useState({
+    price: false,
+    // puedes añadir otros errores aquí si necesitas
+  });
   const toast = useToast();
 
   const handleInputChange = (e) => {
@@ -71,9 +86,34 @@ const Product = () => {
   };
 
   const handleNumberChange = (name, value) => {
+    if (name === 'price') {
+      // Validación para el precio
+      const numericValue = parseFloat(value);
+      const isValid = !isNaN(numericValue) && numericValue > 0;
+
+      setErrors((prev) => ({
+        ...prev,
+        price: !isValid,
+      }));
+
+      if (isValid || value === '') {
+        setFormData((prev) => ({
+          ...prev,
+          [name]: value,
+        }));
+      }
+    } else {
+      // Para otros campos numéricos
+      setFormData((prev) => ({
+        ...prev,
+        [name]: value,
+      }));
+    }
+  };
+  const handleFileChange = (e) => {
     setFormData((prev) => ({
       ...prev,
-      [name]: value,
+      prodImage: e.target.files[0],
     }));
   };
 
@@ -111,10 +151,40 @@ const Product = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    // Validación final antes de enviar
+    const priceValue = parseFloat(formData.price);
+    if (isNaN(priceValue) || priceValue <= 0) {
+      setErrors((prev) => ({
+        ...prev,
+        price: true,
+      }));
+      toast({
+        title: 'Error',
+        description: 'Por favor ingrese un precio válido (mayor a 0)',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+      return;
+    }
     setIsLoading(true);
+    // Crear FormData correctamente
+    const formDataToSend = new FormData();
+    // Añadir todos los campos del formulario
+    for (const key in formData) {
+      formDataToSend.append(key, formData[key]);
+    }
+    // Añadir la imagen si existe
+    if (formData.prodImage) {
+      formDataToSend.append('prodImage', formData.prodImage);
+    }
 
     try {
-      const { data } = await axios.post('/api/product', formData);
+      const { data } = await axios.post('/api/product', formData, {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      });
       setProducts((prev) => [...prev, data]);
 
       toast({
@@ -139,6 +209,7 @@ const Product = () => {
         subcategoryId: '',
         brandId: '',
         aliquotId: '',
+        prodImage: '',
       });
     } catch (error) {
       toast({
@@ -175,14 +246,27 @@ const Product = () => {
         duration: 3000,
         isClosable: true,
       });
+    } finally {
+      onDeleteDialogClose();
+      setProductToDelete(null);
     }
   };
+  const openDeleteDialog = (productId) => {
+    setProductToDelete(productId);
+    onDeleteDialogOpen();
+  };
 
-  const handleUpdate = async (updatedProduct) => {
+  const handleUpdate = async (formData) => {
     try {
+      const productId = formData.get('id');
       const { data } = await axios.patch(
-        `/api/product/${updatedProduct.id}`,
-        updatedProduct
+        `/api/product/${productId}`,
+        formData,
+        {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+          },
+        }
       );
       setProducts((prev) => prev.map((p) => (p.id === data.id ? data : p)));
 
@@ -233,7 +317,6 @@ const Product = () => {
             Administrar Productos
           </Heading>
         </Flex>
-
         {/* Formulario para nuevo producto */}
         <Card
           p={6}
@@ -249,7 +332,7 @@ const Product = () => {
           >
             Agregar Nuevo Producto
           </Heading>
-          <Divider mb={4} />
+          <Divider mb={6} />
 
           <FormControl
             as='form'
@@ -257,89 +340,128 @@ const Product = () => {
           >
             <Flex
               direction='column'
-              gap={4}
+              gap={6}
             >
               {/* Primera fila - Nombre y SKU */}
               <Flex
                 direction={{ base: 'column', md: 'row' }}
                 gap={4}
               >
-                <InputGroup flex={2}>
-                  <InputLeftAddon bg='gray.50'>
-                    <Icon
-                      as={FaBox}
-                      color='gray.500'
+                <FormControl flex={{ md: 2 }}>
+                  <InputGroup>
+                    <InputLeftAddon bg='gray.50'>
+                      <Icon
+                        as={FaBox}
+                        color='gray.500'
+                      />
+                    </InputLeftAddon>
+                    <Input
+                      name='name'
+                      value={formData.name}
+                      onChange={handleInputChange}
+                      placeholder='Nombre del producto'
+                      bg='white'
+                      focusBorderColor='blue.400'
+                      required
                     />
-                  </InputLeftAddon>
-                  <Input
-                    name='name'
-                    value={formData.name}
-                    onChange={handleInputChange}
-                    placeholder='Nombre del producto'
-                    bg='white'
-                    focusBorderColor='blue.400'
-                    required
-                  />
-                </InputGroup>
+                  </InputGroup>
+                </FormControl>
 
-                <InputGroup flex={1}>
-                  <InputLeftAddon bg='gray.50'>
-                    <Icon
-                      as={FaBarcode}
-                      color='gray.500'
+                <FormControl flex={{ md: 1 }}>
+                  <InputGroup>
+                    <InputLeftAddon bg='gray.50'>
+                      <Icon
+                        as={FaBarcode}
+                        color='gray.500'
+                      />
+                    </InputLeftAddon>
+                    <Input
+                      name='sku'
+                      value={formData.sku}
+                      onChange={handleInputChange}
+                      placeholder='SKU'
+                      bg='white'
+                      focusBorderColor='blue.400'
+                      required
                     />
-                  </InputLeftAddon>
-                  <Input
-                    name='sku'
-                    value={formData.sku}
-                    onChange={handleInputChange}
-                    placeholder='SKU'
-                    bg='white'
-                    focusBorderColor='blue.400'
-                    required
-                  />
-                </InputGroup>
+                  </InputGroup>
+                </FormControl>
               </Flex>
 
-              {/* Descripción */}
-              <FormControl>
-                <InputGroup>
-                  <InputLeftAddon bg='gray.50'>
-                    <Icon
-                      as={FaInfoCircle}
-                      color='gray.500'
+              {/* Descripción e Imagen */}
+              <Flex
+                direction={{ base: 'column', md: 'row' }}
+                gap={4}
+              >
+                <FormControl flex={{ md: 2 }}>
+                  <InputGroup>
+                    <InputLeftAddon bg='gray.50'>
+                      <Icon
+                        as={FaInfoCircle}
+                        color='gray.500'
+                      />
+                    </InputLeftAddon>
+                    <Textarea
+                      name='description'
+                      value={formData.description}
+                      onChange={handleInputChange}
+                      placeholder='Descripción del producto'
+                      bg='white'
+                      focusBorderColor='blue.400'
+                      rows={3}
+                      required
                     />
-                  </InputLeftAddon>
-                  <Textarea
-                    name='description'
-                    value={formData.description}
-                    onChange={handleInputChange}
-                    placeholder='Descripción del producto'
-                    bg='white'
-                    focusBorderColor='blue.400'
-                    rows={3}
-                    required
-                  />
-                </InputGroup>
-              </FormControl>
+                  </InputGroup>
+                </FormControl>
+
+                <FormControl flex={{ md: 1 }}>
+                  <Flex
+                    direction='column'
+                    h='100%'
+                  >
+                    <FormLabel>Imagen del producto</FormLabel>
+                    <InputGroup>
+                      <InputLeftAddon bg='gray.50'>
+                        <Icon
+                          as={FaImage}
+                          color='gray.500'
+                        />
+                      </InputLeftAddon>
+                      <Input
+                        type='file'
+                        accept='image/*'
+                        onChange={handleFileChange}
+                        py={1}
+                        bg='white'
+                        focusBorderColor='blue.400'
+                        required
+                        borderLeftRadius={0}
+                      />
+                    </InputGroup>
+                  </Flex>
+                </FormControl>
+              </Flex>
 
               {/* Segunda fila - Precio, Stock y Stock Mínimo */}
               <Flex
                 direction={{ base: 'column', md: 'row' }}
                 gap={4}
               >
-                <FormControl flex={1}>
+                <FormControl>
+                  <FormLabel>Precio</FormLabel>
                   <InputGroup>
                     <InputLeftAddon bg='gray.50'>$</InputLeftAddon>
                     <NumberInput
                       value={formData.price}
                       onChange={(value) => handleNumberChange('price', value)}
-                      min={0}
+                      min={0.01}
                       precision={2}
+                      step={0.01}
                       width='100%'
+                      clampValueOnBlur={true}
                     >
                       <NumberInputField
-                        placeholder='Precio'
+                        placeholder='Ej: 19.99'
                         bg='white'
                         focusBorderColor='blue.400'
                         required
@@ -350,9 +472,15 @@ const Product = () => {
                       </NumberInputStepper>
                     </NumberInput>
                   </InputGroup>
+                  {errors.price && (
+                    <FormErrorMessage>
+                      El precio debe ser mayor a 0
+                    </FormErrorMessage>
+                  )}
                 </FormControl>
 
-                <FormControl flex={1}>
+                <FormControl>
+                  <FormLabel>Stock actual</FormLabel>
                   <InputGroup>
                     <InputLeftAddon bg='gray.50'>
                       <Icon
@@ -367,20 +495,17 @@ const Product = () => {
                       width='100%'
                     >
                       <NumberInputField
-                        placeholder='Stock'
+                        placeholder='0'
                         bg='white'
                         focusBorderColor='blue.400'
                         required
                       />
-                      <NumberInputStepper>
-                        <NumberIncrementStepper />
-                        <NumberDecrementStepper />
-                      </NumberInputStepper>
                     </NumberInput>
                   </InputGroup>
                 </FormControl>
 
-                <FormControl flex={1}>
+                <FormControl>
+                  <FormLabel>Stock mínimo</FormLabel>
                   <InputGroup>
                     <InputLeftAddon bg='gray.50'>
                       <Icon
@@ -397,15 +522,11 @@ const Product = () => {
                       width='100%'
                     >
                       <NumberInputField
-                        placeholder='Stock mínimo'
+                        placeholder='0'
                         bg='white'
                         focusBorderColor='blue.400'
                         required
                       />
-                      <NumberInputStepper>
-                        <NumberIncrementStepper />
-                        <NumberDecrementStepper />
-                      </NumberInputStepper>
                     </NumberInput>
                   </InputGroup>
                 </FormControl>
@@ -416,7 +537,8 @@ const Product = () => {
                 direction={{ base: 'column', md: 'row' }}
                 gap={4}
               >
-                <FormControl flex={1}>
+                <FormControl>
+                  <FormLabel>Unidad de medida</FormLabel>
                   <InputGroup>
                     <InputLeftAddon bg='gray.50'>
                       <Icon
@@ -428,7 +550,7 @@ const Product = () => {
                       name='unit'
                       value={formData.unit}
                       onChange={handleInputChange}
-                      placeholder='Unidad (kg, g, l, ml, etc.)'
+                      placeholder='kg, g, l, ml, etc.'
                       bg='white'
                       focusBorderColor='blue.400'
                       required
@@ -436,7 +558,8 @@ const Product = () => {
                   </InputGroup>
                 </FormControl>
 
-                <FormControl flex={1}>
+                <FormControl>
+                  <FormLabel>Unidades por paquete</FormLabel>
                   <InputGroup>
                     <InputLeftAddon bg='gray.50'>
                       <Icon
@@ -453,32 +576,34 @@ const Product = () => {
                       width='100%'
                     >
                       <NumberInputField
-                        placeholder='Unidades por paquete'
+                        placeholder='1'
                         bg='white'
                         focusBorderColor='blue.400'
                         required
                       />
-                      <NumberInputStepper>
-                        <NumberIncrementStepper />
-                        <NumberDecrementStepper />
-                      </NumberInputStepper>
                     </NumberInput>
                   </InputGroup>
                 </FormControl>
 
                 <FormControl
-                  flex={1}
                   display='flex'
-                  alignItems='center'
+                  alignItems='flex-end'
                 >
-                  <Switch
-                    name='isActive'
-                    isChecked={formData.isActive}
-                    onChange={handleInputChange}
-                    colorScheme='blue'
-                    mr={2}
-                  />
-                  <Text>{formData.isActive ? 'Activo' : 'Inactivo'}</Text>
+                  <Flex
+                    align='center'
+                    mt={6}
+                  >
+                    <Switch
+                      name='isActive'
+                      isChecked={formData.isActive}
+                      onChange={handleInputChange}
+                      colorScheme='blue'
+                      mr={2}
+                    />
+                    <Text fontWeight='medium'>
+                      {formData.isActive ? 'Activo' : 'Inactivo'}
+                    </Text>
+                  </Flex>
                 </FormControl>
               </Flex>
 
@@ -487,7 +612,8 @@ const Product = () => {
                 direction={{ base: 'column', md: 'row' }}
                 gap={4}
               >
-                <FormControl flex={1}>
+                <FormControl>
+                  <FormLabel>Marca</FormLabel>
                   <Select
                     name='brandId'
                     value={formData.brandId}
@@ -508,7 +634,8 @@ const Product = () => {
                   </Select>
                 </FormControl>
 
-                <FormControl flex={1}>
+                <FormControl>
+                  <FormLabel>Subcategoría</FormLabel>
                   <Select
                     name='subcategoryId'
                     value={formData.subcategoryId}
@@ -529,7 +656,8 @@ const Product = () => {
                   </Select>
                 </FormControl>
 
-                <FormControl flex={1}>
+                <FormControl>
+                  <FormLabel>Alicuota</FormLabel>
                   <Select
                     name='aliquotId'
                     value={formData.aliquotId}
@@ -544,7 +672,7 @@ const Product = () => {
                         key={aliquot.id}
                         value={aliquot.id}
                       >
-                        {aliquot.code} -  {aliquot.percentage}%
+                        {aliquot.code} - {aliquot.percentage}%
                       </option>
                     ))}
                   </Select>
@@ -559,6 +687,7 @@ const Product = () => {
                 alignSelf='flex-end'
                 isLoading={isLoading}
                 loadingText='Agregando...'
+                size='lg'
               >
                 Agregar Producto
               </Button>
@@ -606,7 +735,8 @@ const Product = () => {
                 <ProductCard
                   key={product.id}
                   product={product}
-                  onDelete={handleDelete}
+                  // onDelete={handleDelete}
+                  onDelete={openDeleteDialog}
                   onUpdate={handleUpdate}
                   brands={brands}
                   subcategories={subcategories}
@@ -625,6 +755,14 @@ const Product = () => {
             </Box>
           )}
         </Card>
+        <DeleteConfirmationModal
+          isOpen={isDeleteDialogOpen}
+          onClose={onDeleteDialogClose}
+          onConfirm={handleDelete}
+          productId={productToDelete}
+          title='Confirmar eliminación de producto'
+          message='¿Estás seguro que deseas eliminar este producto? Esta acción no se puede deshacer.'
+        />
       </Box>
     </SidebarHeader>
   );
