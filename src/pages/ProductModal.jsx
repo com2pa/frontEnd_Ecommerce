@@ -20,9 +20,9 @@ import {
   Select,
   Switch,
   Flex,
-//   useToast,
+  //   useToast,
 } from '@chakra-ui/react';
-
+import { FaImage } from 'react-icons/fa';
 const ProductModal = ({
   isOpen,
   onClose,
@@ -34,7 +34,8 @@ const ProductModal = ({
 }) => {
   const [editingProduct, setEditingProduct] = React.useState(product);
   const [isLoading, setIsLoading] = React.useState(false);
-//   const toast = useToast();
+  const [imageFile, setImageFile] = React.useState(null);
+  //   const toast = useToast();
 
   React.useEffect(() => {
     setEditingProduct(product);
@@ -54,11 +55,31 @@ const ProductModal = ({
       [name]: value,
     }));
   };
+  const handleFileChange = (e) => {
+    setImageFile(e.target.files[0]);
+  };
 
   const handleSubmit = async () => {
     setIsLoading(true);
     try {
-      const success = await onUpdate(editingProduct);
+      const formData = new FormData();
+      // Añadir el ID del producto al FormData
+      formData.append('id', editingProduct.id);
+      // Añadir todos los campos del producto
+      // for (const key in editingProduct) {
+      //   formData.append(key, editingProduct[key]);
+      // }
+      
+    Object.keys(editingProduct).forEach(key => {
+      if (key !== 'prodImage') {
+        formData.append(key, editingProduct[key]);
+      }
+    });
+      if (imageFile) {
+        formData.append('image', imageFile);
+      }
+
+      const success = await onUpdate(formData);
       if (success) {
         onClose();
       }
@@ -82,6 +103,15 @@ const ProductModal = ({
             direction='column'
             gap={4}
           >
+            <FormControl>
+              <FormLabel>Imagen del Producto</FormLabel>
+              <Input
+                type='file'
+                accept='image/*'
+                onChange={handleFileChange}
+                py={1}
+              />
+            </FormControl>
             <FormControl>
               <FormLabel>Nombre</FormLabel>
               <Input
