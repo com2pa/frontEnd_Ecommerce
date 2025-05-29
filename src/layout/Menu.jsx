@@ -95,7 +95,7 @@ const callsToAction = [
 ];
 // sesion
 const Sesion = [
-  { name: 'Login', href: '#', icon: UserIcon },
+  { name: 'Login', href: '/login', icon: UserIcon },
   { name: 'Register', href: '#', icon: ArchiveBoxIcon }
 ]
 

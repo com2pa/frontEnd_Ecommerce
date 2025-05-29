@@ -20,9 +20,18 @@ import {
   Select,
   Switch,
   Flex,
-  //   useToast,
+  Grid,
+  GridItem,
+  useToast,
+  FormErrorMessage,
+  Avatar,
+  Box,
+  Text,
+  useBreakpointValue,
 } from '@chakra-ui/react';
 import { FaImage } from 'react-icons/fa';
+import { useForm } from 'react-hook-form';
+
 const ProductModal = ({
   isOpen,
   onClose,
@@ -32,57 +41,81 @@ const ProductModal = ({
   subcategories,
   aliquots,
 }) => {
-  const [editingProduct, setEditingProduct] = React.useState(product);
-  const [isLoading, setIsLoading] = React.useState(false);
+  const toast = useToast();
+  const isMobile = useBreakpointValue({ base: true, md: false });
+  const {
+    register,
+    handleSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+    reset,
+  } = useForm({
+    defaultValues: product || {
+      name: '',
+      description: '',
+      price: 0,
+      stock: 0,
+      minStock: 0,
+      brandId: '',
+      subcategoryId: '',
+      aliquotId: '',
+      isActive: true,
+    },
+  });
+
   const [imageFile, setImageFile] = React.useState(null);
-  //   const toast = useToast();
+  const [isLoading, setIsLoading] = React.useState(false);
+  const currentImage = watch('prodImage');
 
   React.useEffect(() => {
-    setEditingProduct(product);
-  }, [product]);
+    if (product) {
+      reset(product);
+    }
+  }, [product, reset]);
 
-  const handleInputChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setEditingProduct((prev) => ({
-      ...prev,
-      [name]: type === 'checkbox' ? checked : value,
-    }));
-  };
-
-  const handleNumberChange = (name, value) => {
-    setEditingProduct((prev) => ({
-      ...prev,
-      [name]: value,
-    }));
-  };
   const handleFileChange = (e) => {
-    setImageFile(e.target.files[0]);
+    const file = e.target.files[0];
+    if (file) {
+      setImageFile(file);
+    }
   };
 
-  const handleSubmit = async () => {
+  const onSubmit = async (data) => {
     setIsLoading(true);
     try {
       const formData = new FormData();
-      // Añadir el ID del producto al FormData
-      formData.append('id', editingProduct.id);
-      // Añadir todos los campos del producto
-      // for (const key in editingProduct) {
-      //   formData.append(key, editingProduct[key]);
-      // }
       
-    Object.keys(editingProduct).forEach(key => {
-      if (key !== 'prodImage') {
-        formData.append(key, editingProduct[key]);
-      }
-    });
+      // Agregar todos los campos excepto prodImage
+      Object.keys(data).forEach(key => {
+        if (key !== 'prodImage') {
+          formData.append(key, data[key]);
+        }
+      });
+      
       if (imageFile) {
         formData.append('image', imageFile);
       }
 
       const success = await onUpdate(formData);
       if (success) {
+        toast({
+          title: 'Producto actualizado',
+          description: 'Los cambios se guardaron correctamente',
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
         onClose();
       }
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error  ,
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
     } finally {
       setIsLoading(false);
     }
@@ -92,184 +125,227 @@ const ProductModal = ({
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      size='xl'
+      size={isMobile ? 'full' : 'xl'}
+      scrollBehavior="inside"
     >
       <ModalOverlay />
       <ModalContent>
-        <ModalHeader>Editar Producto</ModalHeader>
+        <ModalHeader borderBottom="1px" borderColor="gray.200">
+          {product?.id ? 'Editar Producto' : 'Nuevo Producto'}
+        </ModalHeader>
         <ModalCloseButton />
-        <ModalBody>
-          <Flex
-            direction='column'
-            gap={4}
-          >
-            <FormControl>
-              <FormLabel>Imagen del Producto</FormLabel>
-              <Input
-                type='file'
-                accept='image/*'
-                onChange={handleFileChange}
-                py={1}
-              />
-            </FormControl>
-            <FormControl>
-              <FormLabel>Nombre</FormLabel>
-              <Input
-                name='name'
-                value={editingProduct?.name || ''}
-                onChange={handleInputChange}
-                placeholder='Nombre del producto'
-              />
-            </FormControl>
+        <ModalBody pb={6}>
+          <form onSubmit={handleSubmit(onSubmit)}>
+            <Grid
+              templateColumns={{ base: '1fr', md: '1fr 1fr' }}
+              gap={6}
+              mb={6}
+            >
+              {/* Columna izquierda */}
+              <GridItem>
+                <FormControl isInvalid={!!errors.name} mb={4}>
+                  <FormLabel>Nombre del producto</FormLabel>
+                  <Input
+                    {...register('name', { required: 'Este campo es requerido' })}
+                    placeholder="Ej: Arroz Blanco"
+                  />
+                  <FormErrorMessage>
+                    {errors.name && errors.name.message}
+                  </FormErrorMessage>
+                </FormControl>
 
-            <FormControl>
-              <FormLabel>Descripción</FormLabel>
-              <Textarea
-                name='description'
-                value={editingProduct?.description || ''}
-                onChange={handleInputChange}
-                placeholder='Descripción del producto'
-              />
-            </FormControl>
+                <FormControl mb={4}>
+                  <FormLabel>Descripción</FormLabel>
+                  <Textarea
+                    {...register('description')}
+                    placeholder="Descripción detallada del producto"
+                    rows={4}
+                  />
+                </FormControl>
 
-            <Flex gap={4}>
-              <FormControl>
-                <FormLabel>Precio</FormLabel>
-                <NumberInput
-                  value={editingProduct?.price || 0}
-                  onChange={(value) => handleNumberChange('price', value)}
-                  min={0}
-                  precision={2}
-                >
-                  <NumberInputField />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
+                <FormControl mb={4}>
+                  <FormLabel>Imagen del producto</FormLabel>
+                  <Flex align="center" gap={4}>
+                    {currentImage || imageFile ? (
+                      <Avatar
+                        size="lg"
+                        src={
+                          imageFile
+                            ? URL.createObjectURL(imageFile)
+                            : currentImage
+                        }
+                      />
+                    ) : (
+                      <Avatar size="lg" icon={<FaImage />} />
+                    )}
+                    <Box flex="1">
+                      <Input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleFileChange}
+                        py={1}
+                        px={0}
+                        border="none"
+                      />
+                      <Text fontSize="sm" color="gray.500" mt={1}>
+                        Formatos: JPG, PNG (Máx. 2MB)
+                      </Text>
+                    </Box>
+                  </Flex>
+                </FormControl>
+              </GridItem>
 
-              <FormControl>
-                <FormLabel>Stock</FormLabel>
-                <NumberInput
-                  value={editingProduct?.stock || 0}
-                  onChange={(value) => handleNumberChange('stock', value)}
-                  min={0}
-                >
-                  <NumberInputField />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-
-              <FormControl>
-                <FormLabel>Stock Mínimo</FormLabel>
-                <NumberInput
-                  value={editingProduct?.minStock || 0}
-                  onChange={(value) => handleNumberChange('minStock', value)}
-                  min={0}
-                >
-                  <NumberInputField />
-                  <NumberInputStepper>
-                    <NumberIncrementStepper />
-                    <NumberDecrementStepper />
-                  </NumberInputStepper>
-                </NumberInput>
-              </FormControl>
-            </Flex>
-
-            <Flex gap={4}>
-              <FormControl>
-                <FormLabel>Marca</FormLabel>
-                <Select
-                  name='brandId'
-                  value={editingProduct?.brandId || ''}
-                  onChange={handleInputChange}
-                >
-                  <option value=''>Seleccione una marca</option>
-                  {brands.map((brand) => (
-                    <option
-                      key={brand.id}
-                      value={brand.id}
+              {/* Columna derecha */}
+              <GridItem>
+                <Grid templateColumns="repeat(2, 1fr)" gap={4} mb={4}>
+                  <FormControl isInvalid={!!errors.price}>
+                    <FormLabel>Precio</FormLabel>
+                    <NumberInput
+                      min={0}
+                      precision={2}
+                      onChange={(value) => setValue('price', value)}
+                      value={watch('price')}
                     >
-                      {brand.name}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
+                      <NumberInputField
+                        {...register('price', {
+                          required: 'Este campo es requerido',
+                          min: { value: 0.01, message: 'Debe ser mayor a 0' },
+                        })}
+                      />
+                      <NumberInputStepper>
+                        <NumberIncrementStepper />
+                        <NumberDecrementStepper />
+                      </NumberInputStepper>
+                    </NumberInput>
+                    <FormErrorMessage>
+                      {errors.price && errors.price.message}
+                    </FormErrorMessage>
+                  </FormControl>
 
-              <FormControl>
-                <FormLabel>Subcategoría</FormLabel>
-                <Select
-                  name='subcategoryId'
-                  value={editingProduct?.subcategoryId || ''}
-                  onChange={handleInputChange}
-                >
-                  <option value=''>Seleccione una subcategoría</option>
-                  {subcategories.map((sub) => (
-                    <option
-                      key={sub.id}
-                      value={sub.id}
+                  <FormControl isInvalid={!!errors.stock}>
+                    <FormLabel>Stock</FormLabel>
+                    <NumberInput
+                      min={0}
+                      onChange={(value) => setValue('stock', value)}
+                      value={watch('stock')}
                     >
-                      {sub.name}
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
-            </Flex>
+                      <NumberInputField
+                        {...register('stock', {
+                          required: 'Este campo es requerido',
+                          min: { value: 0, message: 'No puede ser negativo' },
+                        })}
+                      />
+                    </NumberInput>
+                    <FormErrorMessage>
+                      {errors.stock && errors.stock.message}
+                    </FormErrorMessage>
+                  </FormControl>
 
-            <Flex gap={4}>
-              <FormControl>
-                <FormLabel>Aliquot</FormLabel>
-                <Select
-                  name='aliquotId'
-                  value={editingProduct?.aliquotId || ''}
-                  onChange={handleInputChange}
-                >
-                  <option value=''>Seleccione un aliquot</option>
-                  {aliquots.map((aliquot) => (
-                    <option
-                      key={aliquot.id}
-                      value={aliquot.id}
+                  <FormControl isInvalid={!!errors.minStock}>
+                    <FormLabel>Stock mínimo</FormLabel>
+                    <NumberInput
+                      min={0}
+                      onChange={(value) => setValue('minStock', value)}
+                      value={watch('minStock')}
                     >
-                      {aliquot.name} {aliquot.code} - {aliquot.percentage}%
-                    </option>
-                  ))}
-                </Select>
-              </FormControl>
+                      <NumberInputField
+                        {...register('minStock', {
+                          required: 'Este campo es requerido',
+                          min: { value: 0, message: 'No puede ser negativo' },
+                        })}
+                      />
+                    </NumberInput>
+                    <FormErrorMessage>
+                      {errors.minStock && errors.minStock.message}
+                    </FormErrorMessage>
+                  </FormControl>
 
-              <FormControl>
-                <FormLabel>Estado</FormLabel>
-                <Switch
-                  name='isActive'
-                  isChecked={editingProduct?.isActive || false}
-                  onChange={handleInputChange}
-                  colorScheme='blue'
-                >
-                  {editingProduct?.isActive ? 'Activo' : 'Inactivo'}
-                </Switch>
-              </FormControl>
-            </Flex>
-          </Flex>
+                  <FormControl display="flex" alignItems="center">
+                    <FormLabel mb={0}>Estado</FormLabel>
+                    <Switch
+                      colorScheme="green"
+                      {...register('isActive')}
+                      isChecked={watch('isActive')}
+                      onChange={(e) => setValue('isActive', e.target.checked)}
+                    />
+                  </FormControl>
+                </Grid>
+
+                <FormControl isInvalid={!!errors.brandId} mb={4}>
+                  <FormLabel>Marca</FormLabel>
+                  <Select
+                    {...register('brandId', {
+                      required: 'Este campo es requerido',
+                    })}
+                    placeholder="Seleccione una marca"
+                  >
+                    {brands.map((brand) => (
+                      <option key={brand.id} value={brand.id}>
+                        {brand.name}
+                      </option>
+                    ))}
+                  </Select>
+                  <FormErrorMessage>
+                    {errors.brandId && errors.brandId.message}
+                  </FormErrorMessage>
+                </FormControl>
+
+                <FormControl isInvalid={!!errors.subcategoryId} mb={4}>
+                  <FormLabel>Subcategoría</FormLabel>
+                  <Select
+                    {...register('subcategoryId', {
+                      required: 'Este campo es requerido',
+                    })}
+                    placeholder="Seleccione una subcategoría"
+                  >
+                    {subcategories.map((sub) => (
+                      <option key={sub.id} value={sub.id}>
+                        {sub.name}
+                      </option>
+                    ))}
+                  </Select>
+                  <FormErrorMessage>
+                    {errors.subcategoryId && errors.subcategoryId.message}
+                  </FormErrorMessage>
+                </FormControl>
+
+                <FormControl isInvalid={!!errors.aliquotId}>
+                  <FormLabel>Alicuota</FormLabel>
+                  <Select
+                    {...register('aliquotId', {
+                      required: 'Este campo es requerido',
+                    })}
+                    placeholder="Seleccione una alicuota"
+                  >
+                    {aliquots.map((aliquot) => (
+                      <option key={aliquot.id} value={aliquot.id}>
+                        {aliquot.name} ({aliquot.percentage}%)
+                      </option>
+                    ))}
+                  </Select>
+                  <FormErrorMessage>
+                    {errors.aliquotId && errors.aliquotId.message}
+                  </FormErrorMessage>
+                </FormControl>
+              </GridItem>
+            </Grid>
+
+            <ModalFooter borderTop="1px" borderColor="gray.200">
+              <Button
+                colorScheme="blue"
+                mr={3}
+                type="submit"
+                isLoading={isLoading}
+                loadingText="Guardando..."
+              >
+                Guardar cambios
+              </Button>
+              <Button variant="outline" onClick={onClose}>
+                Cancelar
+              </Button>
+            </ModalFooter>
+          </form>
         </ModalBody>
-        <ModalFooter>
-          <Button
-            colorScheme='blue'
-            mr={3}
-            onClick={handleSubmit}
-            isLoading={isLoading}
-          >
-            Guardar Cambios
-          </Button>
-          <Button
-            variant='ghost'
-            onClick={onClose}
-          >
-            Cancelar
-          </Button>
-        </ModalFooter>
       </ModalContent>
     </Modal>
   );

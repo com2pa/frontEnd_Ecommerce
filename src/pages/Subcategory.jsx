@@ -179,7 +179,7 @@ const Subcategory = () => {
     const code = editingSubcategory.code
     // console.log(,, 'sub');
     try {
-      const { data } = await axios.put(`/api/subcategory/${id}`, {
+      const { data } = await axios.patch(`/api/subcategory/${id}`, {
         name,
         code,
       });
