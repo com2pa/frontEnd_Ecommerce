@@ -10,9 +10,11 @@ import {
   useDisclosure,
   Image,
   Avatar,
+  IconButton,
 } from '@chakra-ui/react';
 import { FaEdit, FaTrash, FaBox, FaInfoCircle } from 'react-icons/fa';
 import ProductModal from './ProductModal';
+import { FiEdit2, FiTrash2 } from 'react-icons/fi';
 
 const ProductCard = ({
   product,
@@ -155,22 +157,26 @@ const ProductCard = ({
             gap={2}
             alignSelf={{ base: 'flex-end', md: 'center' }}
           >
-            <Button
-              size={{ base: 'sm', md: 'md' }}
+            <IconButton
+              icon={<FiEdit2 />}
+              aria-label='Editar producto'
+              variant='ghost'
               colorScheme='blue'
-              leftIcon={<FaEdit />}
+              size={{ base: 'sm', md: 'md' }}
               onClick={onOpen}
             >
-              <Text display={{ base: 'none', sm: 'block' }}>Editar</Text>
-            </Button>
-            <Button
-              size={{ base: 'sm', md: 'md' }}
+              {/* <Text display={{ base: 'none', sm: 'block' }}>Editar</Text> */}
+            </IconButton>
+            <IconButton
+              icon={<FiTrash2 />}
+              aria-label='Eliminar producto'
+              variant='ghost'
               colorScheme='red'
-              leftIcon={<FaTrash />}
+              size={{ base: 'sm', md: 'md' }}
               onClick={() => onDelete(product.id)}
             >
-              <Text display={{ base: 'none', sm: 'block' }}>Eliminar</Text>
-            </Button>
+              {/* <Text display={{ base: 'none', sm: 'block' }}>Eliminar</Text> */}
+            </IconButton>
           </Flex>
         </Flex>
       </Card>
