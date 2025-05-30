@@ -46,7 +46,7 @@ const ProductCard = ({
             {/* Mostrar la imagen del producto si existe */}
             {product.prodImage ? (
               <Image
-                src={product.prodImage}
+                src={`/api/product/image/${product.prodImage}`}
                 // alt={product.name}
                 boxSize={{ base: '60px', md: '80px' }}
                 objectFit='cover'
