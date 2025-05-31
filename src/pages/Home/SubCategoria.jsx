@@ -131,6 +131,7 @@ const Subcategorias = () => {
             </Badge>
             <Button 
               as={RouterLink}
+              // to={`/api/product/subcategory/${subcategory.id}`}
               to={`/subcategorias/${subcategory.id}/productos`}
               colorScheme="teal"
               size="sm"
