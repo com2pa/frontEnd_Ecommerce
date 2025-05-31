@@ -7,6 +7,7 @@ import Subcategory from '../pagesPrivate/Subcategory';
 import Aliquots from '../pagesPrivate/Aliquots';
 import Product from '../pagesPrivate/Product';
 import Brand from '../pagesPrivate/Brand';
+import PerfilUser from '../pagesPrivate/PerfilUser';
 const Private = () => {
   return (
     <>
@@ -18,6 +19,7 @@ const Private = () => {
           <Route path='/aliquots' element={<Aliquots/>} />
           <Route path='/product' element={<Product/> } />
           <Route path='/brand' element={<Brand />} />
+          <Route path='/profileUser' element={<PerfilUser />} />
         </Route>
       </Routes>
     </>
