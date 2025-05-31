@@ -1,16 +1,19 @@
 import React from 'react';
 import Menu from '../layout/Menu';
 import PiePagina from '../layout/PiePagina';
-
+import Categoria from './Home/Categoria';
+import { Outlet } from 'react-router-dom';
 const Home = () => {
   return (
-    <div>
-          <Menu />
+    <>
+        <Menu />
           <div>
-              <h1>sdsd</h1>
+            <Categoria />
+         
+             <Outlet />
          </div>
       <PiePagina />
-    </div>
+    </>
   );
 };
 
