@@ -10,6 +10,7 @@ import Register from '../pages/Register';
 import Categoria from '../pages/Home/Categoria';
 import Subcategorias from '../pages/Home/SubCategoria';
 import Productos from '../pages/Home/Productos';
+import DetalleProducto from '../pages/Home/DetalleProducto';
 
 
 export const Public = () => {
@@ -25,6 +26,7 @@ export const Public = () => {
         <Route path='/categorias' element={<Categoria />} />
         <Route path='/categorias/:id' element={<Subcategorias />} />
         <Route path='/subcategorias/:id/productos' element={<Productos />} />
+        <Route path='/productos/:id' element={<DetalleProducto />} />
          {/* <Route path='/registro' element={<Registro/>}/>
         <Route path='/somos' element={<QuienesSomos/>} /> */}
       </Routes>
