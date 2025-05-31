@@ -7,7 +7,6 @@ import PersistAuth from '../components/PersistAuth';
 import Home from '../pages/Home';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
-import Brand from '../pages/Brand';
 
 
 export const Public = () => {
@@ -17,10 +16,8 @@ export const Public = () => {
         <Route element={<PersistAuth />}>
           <Route path='/' element={<Home />}/>
         </Route>
-
         <Route path='/login' element={<Login />} />
-        <Route path='/register' element={<Register />} />
-        <Route path='/brand' element={<Brand />} />
+        <Route path='/register' element={<Register />} />       
         <Route path='/verify/:id/:token' element={<Verify />} />
          {/* <Route path='/registro' element={<Registro/>}/>
         <Route path='/somos' element={<QuienesSomos/>} /> */}
