@@ -213,8 +213,11 @@ const MobileNav = ({ onOpen, ...rest }) => {
             >
               <MenuItem
                 _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+                as={ReactRouterLink}
+                to="/"
+                icon={<FiHome />}
               >
-                Perfil
+                Home
               </MenuItem>
               <Divider my={1} />
               <MenuItem
@@ -223,6 +226,16 @@ const MobileNav = ({ onOpen, ...rest }) => {
                 onClick={handleLogout}
               >
                 Cerrar sesión
+              </MenuItem>
+              <MenuItem
+                as={ReactRouterLink}
+                to="/profile"
+                _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
+              >
+                Mi Perfil
+              </MenuItem>
+              <MenuItem
+              to="/">
               </MenuItem>
             </MenuList>
           </Menu>
