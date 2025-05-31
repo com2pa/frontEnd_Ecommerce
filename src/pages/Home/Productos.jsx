@@ -35,7 +35,7 @@ const Productos = () => {
   const toast = useToast();
   const navigate = useNavigate();
   const columns = useBreakpointValue({ base: 1, sm: 2, md: 3, lg: 3 });
-
+  // console.log(products);
   useEffect(() => {
    // Cambia esta parte del useEffect
   const fetchData = async () => {
@@ -138,7 +138,7 @@ const Productos = () => {
               >
                 {product.prodImage ? (
                   <Image 
-                    src={`/uploads/${product.prodImage}`} 
+                    src={`/api/product/image/${product.prodImage}`} 
                     alt={product.name}
                     objectFit="contain"
                     maxH="100%"
@@ -185,7 +185,17 @@ const Productos = () => {
                       {product.stock} en stock
                     </Text>
                   </VStack>
-                  
+
+                 <HStack spacing={2}>
+                  <Button 
+                    as={RouterLink}
+                    to={`/productos/${product.id}`}
+                    colorScheme="teal"
+                    size="sm"
+                    variant="outline"
+                  >
+                    Ver Detalle
+                  </Button>
                   <Button 
                     colorScheme="teal"
                     size="sm"
@@ -193,6 +203,7 @@ const Productos = () => {
                   >
                     Agregar al carrito
                   </Button>
+                </HStack>
                 </Flex>
                 
                 <HStack spacing={1} color="yellow.500">
