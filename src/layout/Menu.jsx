@@ -22,6 +22,7 @@ import {
   SquaresPlusIcon,
   UserIcon,
   XMarkIcon,
+  ShoppingCartIcon, 
 } from '@heroicons/react/24/outline';
 import {
   ChevronDownIcon,
@@ -30,6 +31,8 @@ import {
   TagIcon,
 } from '@heroicons/react/20/solid';
 import { DocumentIcon } from '@heroicons/react/20/solid';
+import { useAuth } from '../hooks/useAuth';
+import axios from 'axios';
 
 const pisoUno = [
   {
@@ -101,7 +104,7 @@ const Sesion = [
 
 export default function Example() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-
+  const { auth } = useAuth()
   return (
     <header className='bg-white'>
       <nav
@@ -264,7 +267,7 @@ export default function Example() {
             Company
           </a>
         </PopoverGroup>
-        <div className='hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-6'>
+        {/* <div className='hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-6'>
           {Sesion.map((item) => (
             <a
               key={item.name}
@@ -275,7 +278,46 @@ export default function Example() {
               {item.name}
             </a>
           ))}
-        </div>
+        </div> */}
+        <div className='hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-6 lg:items-center'>
+        {auth?.name ? (
+          <>
+            <div className='flex items-center gap-x-2'>
+              <span className='text-sm/6 font-semibold text-gray-900'>
+                Hola, {auth.name}
+              </span>
+              <div className='relative'>
+                <button className='p-1 text-gray-900 hover:text-indigo-600'>
+                  <ShoppingCartIcon className='h-6 w-6' />
+                  <span className='absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>
+                    0 {/* Aquí puedes poner la cantidad de items en el carrito */}
+                  </span>
+                </button>
+              </div>
+            </div>
+            <button 
+              onClick={() => {
+                // Lógica para cerrar sesión
+                axios.get('/api/logout').then(() => window.location.reload());
+              }}
+              className='text-sm/6 font-semibold text-gray-900 hover:text-indigo-600'
+            >
+              Cerrar sesión
+            </button>
+          </>
+        ) : (
+          Sesion.map((item) => (
+            <a
+              key={item.name}
+              href={item.href}
+              className='flex items-center gap-x-1 text-sm/6 font-semibold text-gray-900'
+            >
+              <item.icon className='size-5' />
+              {item.name}
+            </a>
+          ))
+        )}
+      </div>
       </nav>
       <Dialog
         open={mobileMenuOpen}
