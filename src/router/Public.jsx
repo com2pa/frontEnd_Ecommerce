@@ -7,6 +7,8 @@ import PersistAuth from '../components/PersistAuth';
 import Home from '../pages/Home';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
+import Categoria from '../pages/Home/Categoria';
+import Subcategorias from '../pages/Home/SubCategoria';
 
 
 export const Public = () => {
@@ -19,6 +21,8 @@ export const Public = () => {
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />       
         <Route path='/verify/:id/:token' element={<Verify />} />
+        <Route path='/categorias' element={<Categoria />} />
+        <Route path='/categorias/:id' element={<Subcategorias />} />
          {/* <Route path='/registro' element={<Registro/>}/>
         <Route path='/somos' element={<QuienesSomos/>} /> */}
       </Routes>
