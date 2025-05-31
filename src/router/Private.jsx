@@ -2,10 +2,11 @@ import React from 'react'
 import { Route, Routes } from 'react-router'
 import PersistAuth from '../components/PersistAuth';
 import Index from '../pagesPrivate/Index';
-import Category from '../pages/category';
-import Subcategory from '../pages/Subcategory';
+import Category from '../pagesPrivate/Category';
+import Subcategory from '../pagesPrivate/Subcategory';
 import Aliquots from '../pagesPrivate/Aliquots';
 import Product from '../pagesPrivate/Product';
+import Brand from '../pagesPrivate/Brand';
 const Private = () => {
   return (
     <>
@@ -16,6 +17,7 @@ const Private = () => {
           <Route path='/subcategory' element={<Subcategory />} />
           <Route path='/aliquots' element={<Aliquots/>} />
           <Route path='/product' element={<Product/> } />
+          <Route path='/brand' element={<Brand />} />
         </Route>
       </Routes>
     </>
