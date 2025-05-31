@@ -229,7 +229,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
               </MenuItem>
               <MenuItem
                 as={ReactRouterLink}
-                to="/profile"
+                to="/profileUser"
                 _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
               >
                 Mi Perfil
