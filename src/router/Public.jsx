@@ -9,6 +9,7 @@ import Login from '../pages/Login';
 import Register from '../pages/Register';
 import Categoria from '../pages/Home/Categoria';
 import Subcategorias from '../pages/Home/SubCategoria';
+import Productos from '../pages/Home/Productos';
 
 
 export const Public = () => {
@@ -23,6 +24,7 @@ export const Public = () => {
         <Route path='/verify/:id/:token' element={<Verify />} />
         <Route path='/categorias' element={<Categoria />} />
         <Route path='/categorias/:id' element={<Subcategorias />} />
+        <Route path='/subcategorias/:id/productos' element={<Productos />} />
          {/* <Route path='/registro' element={<Registro/>}/>
         <Route path='/somos' element={<QuienesSomos/>} /> */}
       </Routes>
