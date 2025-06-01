@@ -142,7 +142,7 @@ const Register = () => {
           isClosable: true,
         });
 
-        console.log('Respuesta del servidor:', response.data);
+        // console.log('Respuesta del servidor:', response.data);
         
         // Reset form after successful submission
         setFormData({
