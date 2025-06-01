@@ -124,7 +124,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
   const handleLogout = async () => {
     try {
       const response = await axios.get('/api/logout');
-      navigate('/');
+      navigate('/home');
 
       toast({
         title: 'Sesión cerrada',
@@ -214,7 +214,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
               <MenuItem
                 _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
                 as={ReactRouterLink}
-                to="/"
+                to="/home"
                 icon={<FiHome />}
               >
                 Home
@@ -234,9 +234,9 @@ const MobileNav = ({ onOpen, ...rest }) => {
               >
                 Mi Perfil
               </MenuItem>
-              <MenuItem
+              {/* <MenuItem
               to="/">
-              </MenuItem>
+              </MenuItem> */}
             </MenuList>
           </Menu>
         </Flex>
