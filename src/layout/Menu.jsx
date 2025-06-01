@@ -146,61 +146,60 @@ function PisoMenu({ label, items, callsToAction }) {
 }
 
 // Componente para el carrito con Popover
-function CartPopover({ cartItems, cartCount, goToCart , loading, updateQuantity, removeItem }) {
+function CartPopover({ cartItems, cartCount, goToCart, loading, updateQuantity, removeItem }) {
   return (
     <Popover className="relative">
       <PopoverButton className="p-1 text-gray-700 hover:text-indigo-600 transition-colors relative">
         <div className="relative">
           <ShoppingCartIcon className='h-6 w-6' />
-          {cartCount.length > 0 && (
+          {cartCount > 0 && (
             <span className='absolute -top-3 -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>
               {cartCount}
             </span>
           )}
         </div>
       </PopoverButton>
-      <PopoverPanel className="absolute right-0 z-10 mt-2 w-80 bg-white shadow-lg rounded-lg ring-1 ring-black ring-opacity-5 p-4">
+      <PopoverPanel className="absolute right-0 z-10 mt-2 w-screen max-w-xs sm:max-w-sm md:w-80 bg-white shadow-lg rounded-lg ring-1 ring-black ring-opacity-5 p-4">
         <div className="flow-root">
           {loading ? (
             <div className="text-center py-4">Cargando...</div>
           ) : cartItems.length > 0 ? (
             <>
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Tu carrito ({cartItems.length})</h3>
+              <h3 className="text-sm font-medium text-gray-900 mb-2">Tu carrito ({cartCount})</h3>
               <div className="divide-y divide-gray-200 max-h-60 overflow-y-auto">
                 {cartItems.map((item) => (
                   <div key={item.id} className="py-3 flex items-start">
                     <div className="flex-shrink-0 h-16 w-16 rounded-md overflow-hidden bg-gray-100">
-                      {/* ... (código existente de la imagen) ... */}
                       {item.product?.prodImage ? (
-                          <img
-                            src={`/api/product/image/${item.product.prodImage}`}
-                            alt={item.product.name}
-                            className="h-full w-full object-cover"
-                            onError={(e) => {
-                              e.target.onerror = null;
-                              e.target.parentElement.innerHTML = `
-                                <div class="h-full w-full flex items-center justify-center text-gray-400">
-                                  <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                  </svg>
-                                </div>
-                              `;
-                            }}
-                          />
-                        ) : (
-                          <div className="h-full w-full flex items-center justify-center text-gray-400">
-                            <TagIcon className="h-5 w-5" />
-                          </div>
-                        )}
-                      </div>
-                    <div className="ml-3 flex-1">
+                        <img
+                          src={`/api/product/image/${item.product.prodImage}`}
+                          alt={item.product.name}
+                          className="h-full w-full object-cover"
+                          onError={(e) => {
+                            e.target.onerror = null;
+                            e.target.parentElement.innerHTML = `
+                              <div class="h-full w-full flex items-center justify-center text-gray-400">
+                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
+                                </svg>
+                              </div>
+                            `;
+                          }}
+                        />
+                      ) : (
+                        <div className="h-full w-full flex items-center justify-center text-gray-400">
+                          <TagIcon className="h-5 w-5" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="ml-3 flex-1 min-w-0">
                       <div className="flex justify-between">
-                        <p className="text-sm font-medium text-gray-900">
+                        <p className="text-sm font-medium text-gray-900 truncate">
                           {item.product?.name || 'Producto'}
                         </p>
                         <button 
                           onClick={() => removeItem(item.id)}
-                          className="text-gray-400 hover:text-red-500"
+                          className="text-gray-400 hover:text-red-500 flex-shrink-0"
                         >
                           <XMarkIcon className="h-4 w-4" />
                         </button>
@@ -228,15 +227,13 @@ function CartPopover({ cartItems, cartCount, goToCart , loading, updateQuantity,
                   </div>
                 ))}
               </div>
-              <div className="mt-4 flex justify-between items-center">
+              <div className="mt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
                 <p className="text-sm font-medium text-gray-900">
                   Total: ${cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0).toFixed(2)}
                 </p>
-                {/* descuento */}
-                
                 <button
                   onClick={goToCart}
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700"
+                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto"
                 >
                   Ver carrito
                 </button>
@@ -257,7 +254,7 @@ export default function Menu() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
-  console.log(cartItems.length)
+  // console.log(cartItems.length)
   const { auth } = useAuth();
   const toast = useToast()
   const navigate = useNavigate(); 
@@ -277,8 +274,8 @@ export default function Menu() {
           });
         
           // Estas son las líneas IMPORTANTES que debes descomentar:
-          setCartItems(response.data.items || []);
-          setCartCount(response.data.count || 0);
+           setCartItems(response.data.items || []);
+           setCartCount(response.data.count || response.data.items?.length || 0);
           
         } catch (error) {
           console.error('Error fetching cart:', error);
@@ -296,25 +293,63 @@ export default function Menu() {
   }, [auth?.token]); 
 
   // actualizar cantidad del producto en el carrito
-  const updateQuantity = async (itemId, newQuantity) => {
-    try {
-      await axios.put('/api/cart/update', {
-        itemId,
-        quantity: newQuantity
-      }, {
-        headers: {
-          'Authorization': `Bearer ${auth?.token}`
-        }
-      });
-      // Actualizar el estado local o volver a cargar el carrito
-    } catch (error) {
+ const updateQuantity = async (itemId, newQuantity) => {
+  try {
+    if (newQuantity < 1) {
       toast({
         title: 'Error',
-        description: 'No se pudo actualizar la cantidad',
+        description: 'La cantidad debe ser al menos 1',
         status: 'error'
       });
+      return;
     }
-  };
+
+    // Primero encontrar el producto en el carrito local
+    const item = cartItems.find(i => i.id === itemId);
+    if (!item) {
+      throw new Error('Producto no encontrado en el carrito');
+    }
+
+    const  productId = item.product._id;
+
+    const response = await axios.put(`/api/cart/update`, {
+       productId,
+      quantity: newQuantity
+    }, {
+      headers: {
+        'Authorization': `Bearer ${auth?.token}`
+      }
+    });
+
+    // Actualizar el estado local del carrito
+    setCartItems(prevItems => 
+      prevItems.map(item => 
+        item.id === itemId ? { ...item, quantity: newQuantity } : item
+      )
+    );
+
+    // Opcional: Mostrar notificación de éxito
+    toast({
+      title: 'Cantidad actualizada',
+      status: 'success',
+      duration: 2000,
+      isClosable: true,
+    });
+
+    // También podrías volver a cargar el carrito completo para asegurar consistencia
+    // fetchCart();
+    
+  } catch (error) {
+    console.error('Error al actualizar cantidad:', error);
+    toast({
+      title: 'Error',
+      description: error.response?.data?.message || 'No se pudo actualizar la cantidad',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+};
   // eliminar producto del carrito
   const removeItem = async (itemId) => {
     try {
@@ -419,7 +454,7 @@ export default function Menu() {
         <DialogPanel className='fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10'>
           <div className='flex items-center justify-between'>
             <a href='#' className='-m-1.5 p-1.5'>
-              <span className='sr-only'>Your Company</span>
+              <span className='sr-only '>Your Company</span>
               <img
                 alt='Logo'
                 src='https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600'
