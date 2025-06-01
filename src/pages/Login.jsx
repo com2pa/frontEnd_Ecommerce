@@ -72,11 +72,12 @@ export const SplitScreen = () => {
     e.preventDefault();
     try {
       const user = {
-        user_id: 1,
+        // user_id: 1,
         email,
         password,
       };
       const response = await axios.post('/api/login', user);
+      
       setAuth(response.data);
       setIsLoading(false);
 
