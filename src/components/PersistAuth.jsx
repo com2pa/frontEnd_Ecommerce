@@ -61,12 +61,12 @@ const PersistAuth = () => {
   }
 
   //cuando estoy en cualquier ruta privada
-  if (auth?.name) {
+  if (auth?.name && location.pathname !== '/') {
     return <Outlet />;
   } else {
     return (
       <Navigate
-        to='/'
+        to='/home'
         state={{ from: location }}
         replace
       />
