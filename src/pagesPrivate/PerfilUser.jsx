@@ -58,7 +58,7 @@ const PerfilUser = () => {
       } catch (error) {
         toast({
           title: 'Error',
-          description: 'No se pudo cargar el perfil',
+          description: error.response?.data?.message || 'Error al cargar el perfil',
           status: 'error',
           duration: 3000,
           isClosable: true,
