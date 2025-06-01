@@ -101,6 +101,7 @@ export const SplitScreen = () => {
       }
 
       navegate('/dashboard');
+      // navegate('/home');
       //window.location.pathname =`/Servicio/`
     } catch (error) {
       setIsLoading(false);
