@@ -20,8 +20,8 @@ export const Public = () => {
       <Routes>
         <Route element={<PersistAuth />}>
           <Route path='/' element={<Index />} />
-          <Route path='/home' element={<Home />}/>
         </Route>
+         <Route path='/home' element={<Home />}/>
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />       
         <Route path='/verify/:id/:token' element={<Verify />} />

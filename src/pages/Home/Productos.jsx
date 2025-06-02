@@ -71,6 +71,28 @@ const Productos = () => {
       </Flex>
     );
   }
+    // añadiendo producto al carrito
+    const addToCart = async () => {
+      try {
+        const response = await axios.post('/api/cart/', { productId: product.id, quantity: 1 });
+        toast({
+          title: 'Producto agregado',
+          description: response.data.message,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: error.response?.data?.message || 'Error al agregar el producto al carrito',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    };
+  
 
   return (
     <>
@@ -200,6 +222,8 @@ const Productos = () => {
                     colorScheme="teal"
                     size="sm"
                     isDisabled={!product.isActive}
+                    onClick={() => addToCart(product.id)}
+                    variant="solid"
                   >
                     Agregar al carrito
                   </Button>
