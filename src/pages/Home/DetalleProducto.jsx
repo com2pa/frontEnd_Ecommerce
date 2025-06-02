@@ -22,7 +22,7 @@ import {
   VStack,
   Tag,
   Grid,
-  GridItem,
+  GridItem,  
   useBreakpointValue
 } from "@chakra-ui/react";
 import { Link as RouterLink, useParams, useNavigate } from 'react-router-dom';
@@ -57,7 +57,7 @@ const DetalleProducto = () => {
     };
 
     fetchData();
-  }, [id]);
+  }, [id,toast, navigate]);
 
   if (loading || !product) {
     return (
@@ -66,6 +66,28 @@ const DetalleProducto = () => {
       </Flex>
     );
   }
+
+  // añadiendo producto al carrito
+  const addToCart = async () => {
+    try {
+      const response = await axios.post('/api/cart/', { productId: product.id, quantity: 1 });
+      toast({
+        title: 'Producto agregado',
+        description: response.data.message,
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'Error al agregar el producto al carrito',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
 
   return (
     <>
@@ -177,6 +199,7 @@ const DetalleProducto = () => {
                   size="lg"
                   isDisabled={!product.isActive}
                   flex="1"
+                  onClick={addToCart}
                 >
                   Agregar al carrito
                 </Button>
