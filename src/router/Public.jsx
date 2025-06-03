@@ -3,7 +3,6 @@ import {  Route, Routes } from 'react-router-dom';
 
 import Verify from '../pages/verify';
 import PersistAuth from '../components/PersistAuth';
-// import Registro from "../pages/Login/Registro";
 import Home from '../pages/Home';
 import Login from '../pages/Login';
 import Register from '../pages/Register';
@@ -29,8 +28,7 @@ export const Public = () => {
         <Route path='/categorias/:id' element={<Subcategorias />} />
         <Route path='/subcategorias/:id/productos' element={<Productos />} />
         <Route path='/productos/:id' element={<DetalleProducto />} />
-         {/* <Route path='/registro' element={<Registro/>}/>
-        <Route path='/somos' element={<QuienesSomos/>} /> */}
+         
       </Routes>
     </>
   );

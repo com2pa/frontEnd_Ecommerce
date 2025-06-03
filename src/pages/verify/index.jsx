@@ -19,7 +19,7 @@ export const Verify = () => {
       setStatus('success');
       setMessage('¡Cuenta verificada con éxito!');
       setTimeout(() => navigate('/login'), 3000);
-    } catch (error) {
+    } catch (error) {      
       setStatus('error');
       setMessage('Error al verificar. Intenta nuevamente.');
     }

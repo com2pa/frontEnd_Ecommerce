@@ -10,7 +10,7 @@ import { HashLoader } from 'react-spinners';
 
 const PersistAuth = () => {
   const location = useLocation();
-  const { auth, setAuth } = useAuth();
+  const { auth, setAuth } = useAuth(null);
   const [isLoading, setIsLoading] = useState(auth.name ? false : true);
   // console.log('inicio sesion',auth.name)
   // Obtener el usuario cada vez que cambia la url o se refresca la pagina para mantener la sesion persistida
@@ -32,7 +32,6 @@ const PersistAuth = () => {
 
   //CUANDO CARGARDO EL USUARIO
   if (isLoading) {
-    // return <Center margin="5rem" flexDirection="column"> <Card padding="2rem 5rem" background="gray.500" > <Heading> Cargando</Heading><Flex justify="center" mt="1rem"><Text> Aguarde unos  Minutos !</Text><Spinner size='md' color="red.600"/></Flex> </Card></Center>;
     return (
       <div>
         <HashLoader
