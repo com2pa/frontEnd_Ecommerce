@@ -1,66 +1,85 @@
-'use client';
-
-import { useEffect, useState } from 'react';
 import {
-  Dialog,
-  DialogPanel,
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
+  Box,
+  Flex,
+  Text,
+  IconButton,
+  Button,
+  Stack,
+  Collapse,
+  Icon,
   Popover,
-  PopoverButton,
-  PopoverGroup,
-  PopoverPanel,
-} from '@headlessui/react';
+  PopoverTrigger,
+  PopoverContent,
+  useColorModeValue,
+  useBreakpointValue,
+  Avatar,
+  Badge,
+  Menu,
+  MenuButton,
+  MenuList,
+  MenuItem,
+  MenuDivider,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  Image,
+  NumberInput,
+  NumberInputField,
+  NumberInputStepper,
+  NumberIncrementStepper,
+  NumberDecrementStepper,
+  Divider,
+  useToast,
+  useDisclosure,
+ 
+} from '@chakra-ui/react';
 import {
-  ArchiveBoxIcon,
-  Bars3Icon,
-  UserIcon,
-  XMarkIcon,
-  ShoppingCartIcon,
-  PlusIcon, 
-} from '@heroicons/react/24/outline';
-import {
+  HamburgerIcon,
+  CloseIcon,
   ChevronDownIcon,
-  PhoneIcon,
-  TagIcon,
-} from '@heroicons/react/20/solid';
-import { FaCartShopping } from "react-icons/fa6";
-import { useAuth } from '../hooks/useAuth';
-import { Button, useToast } from '@chakra-ui/react';
+  ChevronRightIcon,
+  MinusIcon
+} from '@chakra-ui/icons';
+import { FiUser, FiShoppingCart, FiTrash2, FiPlus, FiArchive, FiPhone, FiTag } from 'react-icons/fi';
+import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { MinusIcon } from '@chakra-ui/icons';
+import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
+import { useAuth } from '../hooks/useAuth';
+// Datos de categorías (de Menu.jsx)
 const pisoUno = [
   {
-    name: 'viveres',
+    name: 'Viveres',
     description: 'Productos de primera necesidad',
     href: '#',
-    icon: TagIcon,
+    icon: FiTag,
   },
   {
     name: 'Frutas y Verduras',
     description: 'Frescos y de temporada',
     href: '#',
-    icon: TagIcon,
+    icon: FiTag,
   },
   {
     name: 'Farmacia',
     description: 'Medicamentos y productos de cuidado personal',
     href: '#',
-    icon: TagIcon,
+    icon: FiTag,
   },
   {
     name: 'Jugueteria',
     description: 'Juguetes para todas las edades',
     href: '#',
-    icon: TagIcon,
+    icon: FiTag,
   },
   {
     name: 'Panaderia',
     description: 'Pan fresco y pastelería',
     href: '#',
-    icon: TagIcon,
+    icon: FiTag,
   },
 ];
 
@@ -69,510 +88,623 @@ const pisoDos = [
     name: 'Ropa',
     description: 'Moda para toda la familia',
     href: '#',
-    icon: TagIcon,
+    icon: FiTag,
   },
   {
     name: 'Electrónica',
     description: 'Los últimos dispositivos tecnológicos',
     href: '#',
-    icon: TagIcon,
+    icon: FiTag,
   },
   {
     name: 'Art.Bebé',
     description: 'Todo para el cuidado del bebé',
     href: '#',
-    icon: TagIcon,
+    icon: FiTag,
   },
   {
     name: 'Mayorista',
     description: 'Productos al por mayor',
     href: '#',
-    icon: TagIcon,
+    icon: FiTag,
   },  
 ];
 
 const callsToAction = [
-  { name: 'Contacto', href: '#', icon: PhoneIcon },
+  { name: 'Contacto', href: '#', icon: FiPhone },
 ];
 
 const sesionItems = [
-  { name: 'Login', href: '/login', icon: UserIcon },
-  { name: 'Register', href: '/register', icon: ArchiveBoxIcon }
+  { name: 'Login', href: '/login', icon: FiUser },
+  { name: 'Register', href: '/register', icon: FiArchive }
 ];
 
-// Extrae los menús de piso a un componente reutilizable
-function PisoMenu({ label, items, callsToAction }) {
-  return (
-    <Popover className='relative'>
-      <PopoverButton className='flex items-center gap-x-1 text-sm/6 font-semibold text-gray-900'>
-        {label}
-        <ChevronDownIcon className='size-5 flex-none text-gray-400' />
-      </PopoverButton>
-      <PopoverPanel className='absolute top-full -left-8 z-10 mt-3 w-screen max-w-md overflow-hidden rounded-3xl bg-white shadow-lg ring-1 ring-gray-900/5'>
-        <div className='p-4'>
-          {items.map((item) => (
-            <div
-              key={item.name}
-              className='group relative flex items-center gap-x-6 rounded-lg p-4 text-sm/6 hover:bg-gray-50'
-            >
-              <div className='flex size-11 flex-none items-center justify-center rounded-lg bg-gray-50 group-hover:bg-white'>
-                <item.icon className='size-6 text-gray-600 group-hover:text-indigo-600' />
-              </div>
-              <div className='flex-auto'>
-                <a href={item.href} className='block font-semibold text-gray-900'>
-                  {item.name}
-                  <span className='absolute inset-0' />
-                </a>
-                <p className='mt-1 text-gray-600'>{item.description}</p>
-              </div>
-            </div>
-          ))}
-        </div>
-        <div className='grid grid-cols-1 divide-y divide-gray-900/5 bg-gray-50'>
-          {callsToAction.map((item) => (
-            <a
-              key={item.name}
-              href={item.href}
-              className='flex items-center justify-center gap-x-2.5 p-3 text-sm/6 font-semibold text-gray-900 hover:bg-gray-100'
-            >
-              <item.icon className='size-5 flex-none text-gray-400' />
-              {item.name}
-            </a>
-          ))}
-        </div>
-      </PopoverPanel>
-    </Popover>
-  );
-}
-
-// Componente para el carrito con Popover
-function CartPopover({ cartItems, cartCount, goToCart, loading, updateQuantity, removeItem }) {
-  return (
-    <Popover className="relative">
-      <PopoverButton className="p-1 text-gray-700 hover:text-indigo-600 transition-colors relative">
-        <div className="relative">
-          <ShoppingCartIcon className='h-6 w-6' />
-          {cartCount > 0 && (
-            <span className='absolute -top-3 -right-3 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center'>
-              {cartCount}
-            </span>
-          )}
-        </div>
-      </PopoverButton>
-      <PopoverPanel className="absolute right-0 z-10 mt-2 w-screen max-w-xs sm:max-w-sm md:w-80 bg-white shadow-lg rounded-lg ring-1 ring-black ring-opacity-5 p-4">
-        <div className="flow-root">
-          {loading ? (
-            <div className="text-center py-4">Cargando...</div>
-          ) : cartItems.length > 0 ? (
-            <>
-              <h3 className="text-sm font-medium text-gray-900 mb-2">Tu carrito ({cartCount})</h3>
-              <div className="divide-y divide-gray-200 max-h-60 overflow-y-auto">
-                {cartItems.map((item) => (
-                  <div key={item.id} className="py-3 flex items-start">
-                    <div className="flex-shrink-0 h-16 w-16 rounded-md overflow-hidden bg-gray-100">
-                      {item.product?.prodImage ? (
-                        <img
-                          src={`/api/product/image/${item.product.prodImage}`}
-                          alt={item.product.name}
-                          className="h-full w-full object-cover"
-                          onError={(e) => {
-                            e.target.onerror = null;
-                            e.target.parentElement.innerHTML = `
-                              <div class="h-full w-full flex items-center justify-center text-gray-400">
-                                <svg class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 8h14M5 8a2 2 0 110-4h14a2 2 0 110 4M5 8v10a2 2 0 002 2h10a2 2 0 002-2V8m-9 4h4" />
-                                </svg>
-                              </div>
-                            `;
-                          }}
-                        />
-                      ) : (
-                        <div className="h-full w-full flex items-center justify-center text-gray-400">
-                          <TagIcon className="h-5 w-5" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="ml-3 flex-1 min-w-0">
-                      <div className="flex justify-between">
-                        <p className="text-sm font-medium text-gray-900 truncate">
-                          {item.product?.name || 'Producto'}
-                        </p>
-                        <button 
-                          onClick={() => removeItem(item.id)}
-                          className="text-gray-400 hover:text-red-500 flex-shrink-0"
-                        >
-                          <XMarkIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-                      <p className="text-sm text-gray-500">
-                        ${(item.product?.price || 0).toFixed(2)}
-                      </p>
-                      <div className="mt-1 flex items-center">
-                        <button 
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          disabled={item.quantity <= 1}
-                          className="text-gray-500 hover:text-indigo-600 disabled:opacity-50"
-                        >
-                          <MinusIcon className="h-4 w-4" />
-                        </button>
-                        <span className="mx-2 text-sm">{item.quantity}</span>
-                        <button 
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="text-gray-500 hover:text-indigo-600"
-                        >
-                          <PlusIcon className="h-4 w-4" />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              <div className="mt-4 flex flex-col sm:flex-row sm:justify-between sm:items-center gap-2">
-                <p className="text-sm font-medium text-gray-900">
-                  Total: ${cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0).toFixed(2)}
-                </p>
-                <button
-                  onClick={goToCart}
-                  className="px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 w-full sm:w-auto"
-                >
-                  Ver carrito
-                </button>
-              </div>
-            </>
-          ) : (
-            <div className="text-center py-4">
-              <p className="text-sm text-gray-500">Tu carrito está vacío</p>
-            </div>
-          )}
-        </div>
-      </PopoverPanel>
-    </Popover>
-  );
-}
-
-export default function Menu() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+export default function Navbar() {
+  const { isOpen, onToggle } = useDisclosure();
+  const { 
+    isOpen: isCartOpen, 
+    onOpen: onCartOpen, 
+    onClose: onCartClose 
+  } = useDisclosure();
+  
   const [cartItems, setCartItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
-  // console.log(cartItems.length)
-  const { auth } = useAuth();
-  const toast = useToast()
-  const navigate = useNavigate(); 
+  const toast = useToast();
+  const navigate = useNavigate();
+  const { auth } = useAuth(null);
+  
+
   const goToCart = () => {
     navigate('/cart');
+    onCartClose();
   };
-
-
-  useEffect(() => {
-      const fetchCart = async () => {
-        try {
-          const response = await axios.get('/api/cart', {
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${auth?.token || ''}`,
-            }  
-          });
-        
-          // Estas son las líneas IMPORTANTES que debes descomentar:
-           setCartItems(response.data.items || []);
-           setCartCount(response.data.count || response.data.items?.length || 0);
-          
-        } catch (error) {
-          console.error('Error fetching cart:', error);
-          toast({
-            title: 'Error al cargar el carrito',
-            description: error.response?.data?.message || 'No se pudo cargar el carrito.',
-            status: 'error',
-            duration: 3000,
-            isClosable: true,
-          });
-        }
-      };
-
-      fetchCart();
-  }, [auth?.token]); 
-
-  // actualizar cantidad del producto en el carrito
- const updateQuantity = async (itemId, newQuantity) => {
-  try {
-    if (newQuantity < 1) {
-      toast({
-        title: 'Error',
-        description: 'La cantidad debe ser al menos 1',
-        status: 'error'
-      });
-      return;
-    }
-
-    // Primero encontrar el producto en el carrito local
-    const item = cartItems.find(i => i.id === itemId);
-    if (!item) {
-      throw new Error('Producto no encontrado en el carrito');
-    }
-
-    const  productId = item.product._id;
-
-    const response = await axios.put(`/api/cart/update`, {
-       productId,
-      quantity: newQuantity
-    }, {
-      headers: {
-        'Authorization': `Bearer ${auth?.token}`
-      }
-    });
-
-    // Actualizar el estado local del carrito
-    setCartItems(prevItems => 
-      prevItems.map(item => 
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      )
-    );
-
-    // Opcional: Mostrar notificación de éxito
-    toast({
-      title: 'Cantidad actualizada',
-      status: 'success',
-      duration: 2000,
-      isClosable: true,
-    });
-
-    // También podrías volver a cargar el carrito completo para asegurar consistencia
-    // fetchCart();
+// obteniendo los datos del carrito al cargar el componente
+  useEffect(() => {  
+    const fetchCart = async () => {
+            try {
+              const response = await axios.get('/api/cart', {
+                headers: {
+                  'Content-Type': 'application/json',
+                  'Authorization': `Bearer ${auth?.token || ''}`,
+                }  
+              });
+            
+              // Estas son las líneas IMPORTANTES que debes descomentar:
+               setCartItems(response.data.items || []);
+               setCartCount(response.data.count || response.data.items?.length || 0);
+              
+            } catch (error) {
+              console.error('Error fetching cart:', error);
+              // toast({
+              //   title: 'Error al cargar el carrito',
+              //   description: error.response?.data?.message || 'No se pudo cargar el carrito.',
+              //   status: 'error',
+              //   duration: 3000,
+              //   isClosable: true,
+              // });
+            }
+          };
+    fetchCart();
+  }, [auth?.token, toast]);
+// función para actualizar la cantidad de un producto en el carrito
+  const updateQuantity = async (  newQuantity) => {
     
-  } catch (error) {
-    console.error('Error al actualizar cantidad:', error);
-    toast({
-      title: 'Error',
-      description: error.response?.data?.message || 'No se pudo actualizar la cantidad',
-      status: 'error',
-      duration: 3000,
-      isClosable: true,
-    });
-  }
-};
-  // eliminar producto del carrito
-  const removeItem = async (itemId) => {
     try {
-      await axios.delete(`/api/cart/remove/${itemId}`, {
-        headers: {
-          'Authorization': `Bearer ${auth?.token}`
-        }
+      if (newQuantity < 1) {
+        toast({
+          title: 'Error',
+          description: 'La cantidad debe ser al menos 1',
+          status: 'error'
+        });
+        return;
+      }
+
+      // Aquí puedes hacer la llamada a tu API usando el productId y newQuantity
+      // await axios.put(`/api/cart/${productId}`, { quantity: newQuantity }, {
+      //   headers: {
+      //     'Content-Type': 'application/json',
+      //     'Authorization': `Bearer ${auth?.token || ''}`,
+      //   }
+      // });
+
+        //   // setCartItems(prevItems =>
+        //   prevItems.map(item =>
+        //     item._id === cartItemId ? { ...item, quantity: newQuantity } : item
+        //   )
+        // );
+
+      toast({
+        title: 'Cantidad actualizada',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
       });
-      // Actualizar el estado local o volver a cargar el carrito
     } catch (error) {
       toast({
         title: 'Error',
-        description: 'No se pudo eliminar el producto',
-        status: 'error'
+        description: error.response?.data?.message || 'No se pudo actualizar la cantidad',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
       });
     }
   };
 
- 
+  const removeItem = async (itemId) => {
+    try {
+      setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
+      
+      // Aquí deberías hacer la llamada a tu API para eliminar
+      toast({
+        title: 'Producto eliminado',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'No se pudo eliminar el producto',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  const total = cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0);
+
+  const PisoSubNav = ({ items }) => {
+    const hoverBg = useColorModeValue('pink.50', 'gray.900');
+    return (
+      <Stack>
+        {items.map((item) => (
+          <Box
+            key={item.name}
+            as="a"
+            href={item.href}
+            role={'group'}
+            display={'block'}
+            p={2}
+            rounded={'md'}
+            _hover={{ bg: hoverBg }}
+          >
+            <Stack direction={'row'} align={'center'}>
+              <Icon as={item.icon} color={'pink.400'} w={5} h={5} />
+              <Box>
+                <Text
+                  transition={'all .3s ease'}
+                  _groupHover={{ color: 'pink.400' }}
+                  fontWeight={500}>
+                  {item.name}
+                </Text>
+                <Text fontSize={'sm'}>{item.description}</Text>
+              </Box>
+            </Stack>
+          </Box>
+        ))}
+      </Stack>
+    );
+  };
+
+
 
   return (
-    <header className='bg-white shadow-sm'>
-      <nav
-        aria-label='Global'
-        className='mx-auto flex max-w-7xl items-center justify-between p-6 lg:px-8'
-      >
-        <div className='flex lg:flex-1'>
-          <a href='#' className='-m-1.5 p-1.5'>
-            <span className='sr-only'>Your Company</span>
-            <img
-              alt='Logo'
-              src='https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600'
-              className='h-8 w-auto'
-            />
-          </a>
-        </div>
+    <Box>
+      <Flex
+        bg={useColorModeValue('white', 'gray.800')}
+        color={useColorModeValue('gray.600', 'white')}
+        minH={'60px'}
+        py={{ base: 2 }}
+        px={{ base: 4 }}
+        borderBottom={1}
+        borderStyle={'solid'}
+        borderColor={useColorModeValue('gray.200', 'gray.900')}
+        align={'center'}>
         
-        {/* Mobile menu button */}
-        <div className='flex lg:hidden'>
-          <button
-            type='button'
-            onClick={() => setMobileMenuOpen(true)}
-            className='-m-2.5 inline-flex items-center justify-center rounded-md p-2.5 text-gray-700'
-          >
-            <span className='sr-only'>Open main menu</span>
-            <Bars3Icon className='size-6' />
-          </button>
-        </div>
+        {/* Menú móvil */}
+        <Flex
+          flex={{ base: 1, md: 'auto' }}
+          ml={{ base: -2 }}
+          display={{ base: 'flex', md: 'none' }}>
+          <IconButton
+            onClick={onToggle}
+            icon={
+              isOpen ? <CloseIcon w={3} h={3} /> : <HamburgerIcon w={5} h={5} />
+            }
+            variant={'ghost'}
+            aria-label={'Toggle Navigation'}
+          />
+        </Flex>
         
-        {/* Desktop navigation */}
-        <PopoverGroup className='hidden lg:flex lg:gap-x-12'>
-          <PisoMenu label="Piso uno" items={pisoUno} callsToAction={callsToAction} />
-          <PisoMenu label="Piso dos" items={pisoDos} callsToAction={callsToAction} />
-          <a href='#' className='text-sm/6 font-semibold text-gray-900'>Ofertas</a>
-          <a href='#' className='text-sm/6 font-semibold text-gray-900'>Nosotros</a>
-          <a href='#' className='text-sm/6 font-semibold text-gray-900'>Contacto</a>
-        </PopoverGroup>
+        {/* Logo y navegación desktop */}
+        <Flex flex={{ base: 1 }} justify={{ base: 'center', md: 'start' }}>
+          <Text
+            textAlign={useBreakpointValue({ base: 'center', md: 'left' })}
+            fontFamily={'heading'}
+            color={useColorModeValue('gray.800', 'white')}
+            fontWeight="bold"
+            fontSize="xl">
+            MiTienda
+          </Text>
 
-        {/* User actions */}
-        <div className='hidden lg:flex lg:flex-1 lg:justify-end lg:gap-x-6 lg:items-center'>
-          {auth?.name ? (
+          <Flex display={{ base: 'none', md: 'flex' }} ml={10}>
+            <Stack direction={'row'} spacing={4}>
+              {/* Menú Piso Uno */}
+              <Box>
+                <Popover trigger={'hover'} placement={'bottom-start'}>
+                  <PopoverTrigger>
+                    <Box
+                      as="a"
+                      p={2}
+                      href={'#'}
+                      fontSize={'sm'}
+                      fontWeight={500}
+                      color={useColorModeValue('gray.600', 'gray.200')}
+                      _hover={{
+                        textDecoration: 'none',
+                        color: useColorModeValue('gray.800', 'white'),
+                      }}>
+                      Piso Uno
+                    </Box>                    
+                  </PopoverTrigger>
+                  <PopoverContent
+                    border={0}
+                    boxShadow={'xl'}
+                    bg={useColorModeValue('white', 'gray.800')}
+                    p={4}
+                    rounded={'xl'}
+                    minW={'sm'}>
+                    <PisoSubNav items={pisoUno} />
+                  </PopoverContent>
+                </Popover>
+              </Box>
+              
+              {/* Menú Piso Dos */}
+              <Box>
+                <Popover trigger={'hover'} placement={'bottom-start'}>
+                  <PopoverTrigger>
+                    <Box
+                      as="a"
+                      p={2}
+                      href={'#'}
+                      fontSize={'sm'}
+                      fontWeight={500}
+                      color={useColorModeValue('gray.600', 'gray.200')}
+                      _hover={{
+                        textDecoration: 'none',
+                        color: useColorModeValue('gray.800', 'white'),
+                      }}>
+                      Piso Dos
+                    </Box>
+                  </PopoverTrigger>
+                  <PopoverContent
+                    border={0}
+                    boxShadow={'xl'}
+                    bg={useColorModeValue('white', 'gray.800')}
+                    p={4}
+                    rounded={'xl'}
+                    minW={'sm'}>
+                    <PisoSubNav items={pisoDos} />
+                  </PopoverContent>
+                </Popover>
+              </Box>
+              
+              {/* Otros enlaces */}
+              <Box as="a" p={2} href={'#'} fontSize={'sm'} fontWeight={500}>
+                Ofertas
+              </Box>
+              <Box as="a" p={2} href={'#'} fontSize={'sm'} fontWeight={500}>
+                Contacto
+              </Box>
+            </Stack>
+          </Flex>
+        </Flex>
+
+        {/* Acciones de usuario */}
+        <Stack
+          flex={{ base: 1, md: 0 }}
+          justify={'flex-end'}
+          direction={'row'}
+          spacing={6}>
+          
+          {auth ? (
+            // Usuario autenticado
             <>
-              <span className='text-sm/6 font-semibold text-gray-900'>
-                Hola, {auth.name}
-              </span>
-              <CartPopover cartItems={cartItems} cartCount={cartCount} goToCart={goToCart} />
-              {/* para ir al dashboard */}
               <Button
-                as='a'
-                href='/dashboard'
-                variant='outline'
-                colorScheme='indigo'
-                size='sm'
-                className='text-sm/6 font-semibold text-gray-900 hover:bg-gray-50'
-              >
-                dashboard
+                as={'a'}
+                fontSize={'sm'}
+                fontWeight={400}
+                variant={'link'}
+                href={'#'}
+                display={{ base: 'none', md: 'inline-flex' }}>
+                <Icon as={FiUser} mr={1} />
+                Hola, {auth.name}
               </Button>
               
+              <Menu>
+                <MenuButton
+                  as={Button}
+                  rounded={'full'}
+                  variant={'link'}
+                  cursor={'pointer'}
+                  minW={0}>
+                  <Avatar
+                    size={'sm'}
+                    src={'https://avatars.dicebear.com/api/male/username.svg'}
+                  />
+                </MenuButton>
+                <MenuList>
+                  <MenuItem>Mis pedidos</MenuItem>
+                  <MenuItem>Lista de deseos</MenuItem>
+                  {auth.role === 'admin' && (
+                    <MenuItem as="a" href="/dashboard">Dashboard</MenuItem>
+                  )}
+                  <MenuDivider />
+                  <MenuItem>Cerrar sesión</MenuItem>
+                </MenuList>
+              </Menu>
+
+              {/* Mostrar carrito solo si hay usuario autenticado */}
+              <Button
+                onClick={onCartOpen}
+                display={'inline-flex'}
+                fontSize={'sm'}
+                fontWeight={600}
+                color={'white'}
+                bg={'pink.400'}
+                _hover={{
+                  bg: 'pink.300',
+                }}
+                position="relative">
+                <Icon as={FiShoppingCart} mr={1} />
+                <Badge 
+                  ml="1" 
+                  colorScheme="green"
+                  position="absolute"
+                  top="-5px"
+                  right="-5px"
+                  borderRadius="full">
+                  {cartCount}
+                </Badge>
+              </Button>
             </>
           ) : (
-            sesionItems.map((item) => (
-              <a
-                key={item.name}
-                href={item.href}
-                className='flex items-center gap-x-1 text-sm/6 font-semibold text-gray-900 hover:text-indigo-600 transition-colors'
-              >
-                <item.icon className='size-5' />
-                {item.name}
-              </a>
-            ))
+            // Usuario no autenticado: SOLO mostrar login y registro
+            <>
+              <Button
+                as={'a'}
+                href="/login"
+                fontSize={'sm'}
+                fontWeight={400}
+                variant={'link'}
+                leftIcon={<Icon as={FiUser} />}
+                display={{ base: 'none', md: 'inline-flex' }}>
+                Login
+              </Button>
+              <Button
+                as={'a'}
+                href="/register"
+                fontSize={'sm'}
+                fontWeight={600}
+                color={'white'}
+                bg={'pink.400'}
+                _hover={{
+                  bg: 'pink.300',
+                }}
+                display={{ base: 'none', md: 'inline-flex' }}>
+                Registrarse
+              </Button>
+            </>
           )}
-        </div>
-      </nav>
+        </Stack>
 
-      {/* Mobile menu */}
-      <Dialog
-        open={mobileMenuOpen}
-        onClose={setMobileMenuOpen}
-        className='lg:hidden'
-      >
-        <div className='fixed inset-0 z-10' />
-        <DialogPanel className='fixed inset-y-0 right-0 z-10 w-full overflow-y-auto bg-white px-6 py-6 sm:max-w-sm sm:ring-1 sm:ring-gray-900/10'>
-          <div className='flex items-center justify-between'>
-            <a href='#' className='-m-1.5 p-1.5'>
-              <span className='sr-only '>Your Company</span>
-              <img
-                alt='Logo'
-                src='https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=600'
-                className='h-8 w-auto'
-              />
-            </a>
-            <button
-              type='button'
-              onClick={() => setMobileMenuOpen(false)}
-              className='-m-2.5 rounded-md p-2.5 text-gray-700'
-            >
-              <span className='sr-only'>Close menu</span>
-              <XMarkIcon className='size-6' />
-            </button>
-          </div>
+      </Flex>
+
+      {/* Menú móvil desplegable */}
+      <Collapse in={isOpen} animateOpacity>
+        <Stack
+          bg={useColorModeValue('white', 'gray.800')}
+          p={4}
+          display={{ md: 'none' }}>
           
-          <div className='mt-6 flow-root'>
-            <div className='-my-6 divide-y divide-gray-500/10'>
-              <div className='space-y-2 py-6'>
-                <Disclosure as='div' className='-mx-3'>
-                  <DisclosureButton className='group flex w-full items-center justify-between rounded-lg py-2 pr-3.5 pl-3 text-base/7 font-semibold text-gray-900 hover:bg-gray-50'>
-                    Piso uno
-                    <ChevronDownIcon className='size-5 flex-none group-data-open:rotate-180' />
-                  </DisclosureButton>
-                  <DisclosurePanel className='mt-2 space-y-2'>
-                    {[...pisoUno, ...callsToAction].map((item) => (
-                      <DisclosureButton
+          {/* Piso Uno */}
+          <Disclosure>
+            {({ isOpen }) => (
+              <Box>
+                <DisclosureButton
+                  as={Button}
+                  rightIcon={<ChevronDownIcon transform={isOpen ? 'rotate(180deg)' : ''} />}
+                  variant="ghost"
+                  textAlign="left">
+                  Piso Uno
+                </DisclosureButton>
+                <DisclosurePanel pb={4}>
+                  <Stack pl={4} borderLeft={1} borderColor={'gray.200'}>
+                    {pisoUno.map((item) => (
+                      <Button 
                         key={item.name}
-                        as='a'
+                        as="a" 
                         href={item.href}
-                        className='block rounded-lg py-2 pr-3 pl-6 text-sm/7 font-semibold text-gray-900 hover:bg-gray-50'
-                      >
+                        variant="ghost"
+                        justifyContent="flex-start"
+                        leftIcon={<Icon as={item.icon} />}>
                         {item.name}
-                      </DisclosureButton>
+                      </Button>
                     ))}
-                  </DisclosurePanel>
-                </Disclosure>
-
-                <Disclosure as='div' className='-mx-3'>
-                  <DisclosureButton className='group flex w-full items-center justify-between rounded-lg py-2 pr-3.5 pl-3 text-base/7 font-semibold text-gray-900 hover:bg-gray-50'>
-                    Piso dos
-                    <ChevronDownIcon className='size-5 flex-none group-data-open:rotate-180' />
-                  </DisclosureButton>
-                  <DisclosurePanel className='mt-2 space-y-2'>
-                    {[...pisoDos, ...callsToAction].map((item) => (
-                      <DisclosureButton
+                  </Stack>
+                </DisclosurePanel>
+              </Box>
+            )}
+          </Disclosure>
+          
+          {/* Piso Dos */}
+          <Disclosure>
+            {({ isOpen }) => (
+              <>
+                <DisclosureButton
+                  as={Button}
+                  rightIcon={<ChevronDownIcon transform={isOpen ? 'rotate(180deg)' : ''} />}
+                  variant="ghost"
+                  textAlign="left">
+                  Piso Dos
+                </DisclosureButton>
+                <DisclosurePanel pb={4}>
+                  <Stack pl={4} borderLeft={1} borderColor={'gray.200'}>
+                    {pisoDos.map((item) => (
+                      <Button 
                         key={item.name}
-                        as='a'
+                        as="a" 
                         href={item.href}
-                        className='block rounded-lg py-2 pr-3 pl-6 text-sm/7 font-semibold text-gray-900 hover:bg-gray-50'
-                      >
+                        variant="ghost"
+                        justifyContent="flex-start"
+                        leftIcon={<Icon as={item.icon} />}>
                         {item.name}
-                      </DisclosureButton>
+                      </Button>
                     ))}
-                  </DisclosurePanel>
-                </Disclosure>
+                  </Stack>
+                </DisclosurePanel>
+              </>
+            )}
+          </Disclosure>
+          
+          {/* Otros enlaces */}
+          <Button as="a" href="#" variant="ghost" justifyContent="flex-start">
+            Ofertas
+          </Button>
+          <Button as="a" href="#" variant="ghost" justifyContent="flex-start">
+            Contacto
+          </Button>
+          
+          {/* Sesión móvil */}
+         {auth ? (
+  // Usuario autenticado (versión móvil)
+  <>
+    <Button 
+      as="a" 
+      href="#"
+      variant="ghost"
+      justifyContent="flex-start"
+      leftIcon={<Icon as={FiUser} />}>
+      Hola, {auth.name}
+    </Button>
+    <Button 
+      as="a" 
+      href="#"
+      variant="ghost"
+      justifyContent="flex-start"
+      leftIcon={<Icon as={FiArchive} />}>
+      Mis pedidos
+    </Button>
+    {auth.role === 'admin' && (
+      <Button 
+        as="a" 
+        href="/dashboard"
+        variant="ghost"
+        justifyContent="flex-start"
+        leftIcon={<Icon as={FiArchive} />}>
+        Dashboard
+      </Button>
+    )}
+  </>
+) : (
+  // Usuario no autenticado (versión móvil)
+  <>
+    <Button
+      as="a"
+      href="/login"
+      variant="ghost"
+      justifyContent="flex-start"
+      leftIcon={<Icon as={FiUser} />}>
+      Login
+    </Button>
+    <Button
+      as="a"
+      href="/register"
+      variant="ghost"
+      justifyContent="flex-start"
+      leftIcon={<Icon as={FiArchive} />}>
+      Registrarse
+    </Button>
+  </>
+)}
+        </Stack>
+      </Collapse>
 
-                <a
-                  href='#'
-                  className='-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50'
-                >
-                  Ofertas
-                </a>
-                <a
-                  href='#'
-                  className='-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50'
-                >
-                  Nosotros
-                </a>
-                <a
-                  href='#'
-                  className='-mx-3 block rounded-lg px-3 py-2 text-base/7 font-semibold text-gray-900 hover:bg-gray-50'
-                >
-                  Contacto
-                </a>
+      {/* Drawer del carrito */}
+      {auth && (
+      <Drawer 
+        isOpen={isCartOpen} 
+        placement="right" 
+        onClose={onCartClose}
+        size={useBreakpointValue({ base: "full", md: "md" })}>
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader borderBottomWidth="1px">
+            Tu Carrito de Compras
+          </DrawerHeader>
 
-              </div>
-
-              <div className='py-6'>
-                {auth?.name ? (
-                  <>
-                    <div className='-mx-3 flex items-center gap-x-2 rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900'>
-                      <UserIcon className='size-5' />
-                      Hola, {auth.name}
-                    </div>
-                    <div className='-mx-3 flex items-center gap-x-2 rounded-lg px-3 py-2.5'>
-                      <CartPopover cartItems={cartItems} cartCount={cartCount} goToCart={goToCart} />
-                    </div>
-                    {/* <button
-                      onClick={handleLogout}
-                      className='-mx-3 w-full text-left flex items-center gap-x-2 rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50'
-                    >
-                      Cerrar sesión
-                    </button> */}
-                  </>
-                ) : (
-                  sesionItems.map((item) => (
-                    <a
-                      key={item.name}
-                      href={item.href}
-                      className='-mx-3 flex items-center gap-x-2 rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900 hover:bg-gray-50'
-                    >
-                      <item.icon className='size-5' />
-                      {item.name}
-                    </a>
-                  ))
-                )}
-              </div>
-              {/* <div className='py-6'>
-                <div className='-mx-3 flex items-center gap-x-2 rounded-lg px-3 py-2.5 text-base/7 font-semibold text-gray-900'>
-                  <FaCartShopping className='size-5' />
-                 
-                </div>
-              </div> */}
-            </div>
-          </div>
-        </DialogPanel>
-      </Dialog>
-    </header>
+          <DrawerBody>
+            {cartItems.length === 0 ? (
+              <Text mt={4}>Tu carrito está vacío</Text>
+            ) : (
+              <Stack spacing={4} mt={4}>
+                {cartItems.map((item) => (
+                  <Box key={item.id}>
+                    <Flex>
+                      <Image
+                        rounded={'md'}
+                        alt={item.product?.name}
+                        src={`/api/product/image/${item.product.prodImage}`}
+                        objectFit={'cover'}
+                        width={'80px'}
+                        height={'80px'}
+                      />
+                      <Box ml={3} flex={1}>
+                        <Text fontWeight="bold">{item.product?.name}</Text>
+                        <Text>${item.product?.price?.toFixed(2) || '0.00'}</Text>
+                        
+                        <Flex mt={2} align="center">
+                          <NumberInput 
+                            size="sm" 
+                            maxW={20} 
+                            value={item.quantity}
+                            min={1}
+                            max={10}
+                            onChange={updateQuantity}>
+                            <NumberInputField />
+                            <NumberInputStepper>
+                              <NumberIncrementStepper />
+                              <NumberDecrementStepper />
+                            </NumberInputStepper>
+                          </NumberInput>
+                          
+                          <IconButton
+                            ml={2}
+                            icon={<FiTrash2 />}
+                            aria-label="Eliminar producto"
+                            size="sm"
+                            colorScheme="red"
+                            variant="ghost"
+                            onClick={() => removeItem(item.id)}
+                          />
+                        </Flex>
+                      </Box>
+                    </Flex>
+                    <Divider my={3} />
+                  </Box>
+                ))}
+                
+                <Box mt={4}>
+                  <Flex justify="space-between" fontWeight="bold">
+                    <Text>Total:</Text>
+                    <Text>${total.toFixed(2)}</Text>
+                  </Flex>
+                  
+                  <Button
+                    mt={4}
+                    colorScheme="pink"
+                    width="full"
+                    size="lg"
+                    onClick={goToCart}>
+                    Proceder al Pago
+                  </Button>
+                  
+                  <Button
+                    mt={2}
+                    variant="outline"
+                    width="full"
+                    onClick={onCartClose}>
+                    Seguir Comprando
+                  </Button>
+                </Box>
+              </Stack>
+            )}
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+      )}
+    </Box>
   );
 }
