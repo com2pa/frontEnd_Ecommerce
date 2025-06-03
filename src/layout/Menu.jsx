@@ -132,7 +132,7 @@ export default function Navbar() {
   const toast = useToast();
   const navigate = useNavigate();
   const { auth } = useAuth(null);
-  
+  console.log(cartItems)
 
   const goToCart = () => {
     navigate('/cart');
@@ -167,8 +167,8 @@ export default function Navbar() {
     fetchCart();
   }, [auth?.token, toast]);
 // función para actualizar la cantidad de un producto en el carrito
-  const updateQuantity = async (  newQuantity) => {
-    
+  const updateQuantity = async (itemId, newQuantity) => {
+    // console.log(itemId,newQuantity)    
     try {
       if (newQuantity < 1) {
         toast({
@@ -178,21 +178,23 @@ export default function Navbar() {
         });
         return;
       }
+     
+      await axios.put(`/api/cart/${itemId}`, { quantity: newQuantity }, {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth?.token || ''}`,
+        }
+      });
 
-      // Aquí puedes hacer la llamada a tu API usando el productId y newQuantity
-      // await axios.put(`/api/cart/${productId}`, { quantity: newQuantity }, {
-      //   headers: {
-      //     'Content-Type': 'application/json',
-      //     'Authorization': `Bearer ${auth?.token || ''}`,
-      //   }
-      // });
-
-        //   // setCartItems(prevItems =>
-        //   prevItems.map(item =>
-        //     item._id === cartItemId ? { ...item, quantity: newQuantity } : item
-        //   )
-        // );
-
+         // Actualiza el estado localmente
+    setCartItems(prevItems => {
+      const updatedItems = prevItems.map(item =>
+        item.id === itemId ? { ...item, quantity: newQuantity } : item
+      );
+      // Actualiza el contador del carrito
+      setCartCount(updatedItems.reduce((acc, item) => acc + item.quantity, 0));
+      return updatedItems;
+    });
       toast({
         title: 'Cantidad actualizada',
         status: 'success',
@@ -652,7 +654,8 @@ export default function Navbar() {
                             value={item.quantity}
                             min={1}
                             max={10}
-                            onChange={updateQuantity}>
+                            onChange={(_, valueAsNumber) => updateQuantity(item.product.id, valueAsNumber)}
+                            >
                             <NumberInputField />
                             <NumberInputStepper>
                               <NumberIncrementStepper />
@@ -680,6 +683,7 @@ export default function Navbar() {
                   <Flex justify="space-between" fontWeight="bold">
                     <Text>Total:</Text>
                     <Text>${total.toFixed(2)}</Text>
+                    <Text>${cartItems?.product?.total}</Text>
                   </Flex>
                   
                   <Button
