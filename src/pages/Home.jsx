@@ -6,7 +6,7 @@ import { Outlet } from 'react-router-dom';
 const Home = () => {
   return (
     <>
-        <Menu />
+        <Menu /> 
           <div>
             <Categoria />
          
