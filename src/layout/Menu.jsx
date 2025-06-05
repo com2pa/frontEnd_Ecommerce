@@ -44,7 +44,7 @@ import {
   MinusIcon
 } from '@chakra-ui/icons';
 import { FiUser, FiShoppingCart, FiTrash2, FiPlus, FiArchive, FiPhone, FiTag } from 'react-icons/fi';
-import { useEffect, useState } from 'react';
+import { useEffect, useState,useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
 import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
@@ -129,6 +129,7 @@ export default function Navbar() {
   
   const [cartItems, setCartItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
+   const [isUpdating, setIsUpdating] = useState(false); // Nuevo estado para controlar actualizaciones
   const toast = useToast();
   const navigate = useNavigate();
   const { auth } = useAuth(null);
@@ -139,78 +140,106 @@ export default function Navbar() {
     onCartClose();
   };
 // obteniendo los datos del carrito al cargar el componente
-  useEffect(() => {  
-    const fetchCart = async () => {
-            try {
-              const response = await axios.get('/api/cart', {
-                headers: {
-                  'Content-Type': 'application/json',
-                  'Authorization': `Bearer ${auth?.token || ''}`,
-                }  
-              });
-            
-              // Estas son las líneas IMPORTANTES que debes descomentar:
-               setCartItems(response.data.items || []);
-               setCartCount(response.data.count || response.data.items?.length || 0);
-              
-            } catch (error) {
-              console.error('Error fetching cart:', error);
-              // toast({
-              //   title: 'Error al cargar el carrito',
-              //   description: error.response?.data?.message || 'No se pudo cargar el carrito.',
-              //   status: 'error',
-              //   duration: 3000,
-              //   isClosable: true,
-              // });
-            }
-          };
-    fetchCart();
-  }, [auth?.token, toast]);
-// función para actualizar la cantidad de un producto en el carrito
-  const updateQuantity = async (itemId, newQuantity) => {
-    // console.log(itemId,newQuantity)    
+  
+      const fetchCart = useCallback(async () => {
     try {
-      if (newQuantity < 1) {
-        toast({
-          title: 'Error',
-          description: 'La cantidad debe ser al menos 1',
-          status: 'error'
-        });
-        return;
-      }
-     
-      await axios.put(`/api/cart/${itemId}`, { quantity: newQuantity }, {
+      const response = await axios.get('/api/cart', {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${auth?.token || ''}`,
+        }  
+      });
+      
+      setCartItems(response.data.items || []);
+      setCartCount(response.data.count || response.data.items?.length || 0);
+    } catch (error) {
+      console.error('Error fetching cart:', error);
+    }
+  }, [auth?.token]);
+  
+ // Cargar el carrito al inicio y cuando cambia el token
+  useEffect(() => {  
+    fetchCart();
+  }, [fetchCart]);
+// función para actualizar la cantidad de un producto en el carrito
+    const updateQuantity = async (productId, newQuantity) => {
+  // Evitar múltiples actualizaciones simultáneas
+  if (isUpdating) return;
+  
+  // Validación básica
+  if (newQuantity < 1) {
+    toast({
+      title: 'Error',
+      description: 'La cantidad debe ser al menos 1',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    });
+    return;
+  }
+
+  setIsUpdating(true);
+  
+  try {
+    // 1. Actualización optimista del estado local
+    setCartItems(prevItems => {
+      const updatedItems = prevItems.map(item =>
+        item.product.id === productId 
+          ? { ...item, quantity: newQuantity } 
+          : item
+      );
+      
+      // Actualizar el contador del carrito
+      const newCount = updatedItems.reduce((acc, item) => acc + item.quantity, 0);
+      setCartCount(newCount);
+      
+      return updatedItems;
+    });
+
+    // 2. Llamada a la API para actualizar en el servidor
+    const response = await axios.put(
+      `/api/cart/${productId}`, 
+      { quantity: newQuantity }, 
+      {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${auth?.token || ''}`,
         }
-      });
+      }
+    );
 
-         // Actualiza el estado localmente
-    setCartItems(prevItems => {
-      const updatedItems = prevItems.map(item =>
-        item.id === itemId ? { ...item, quantity: newQuantity } : item
-      );
-      // Actualiza el contador del carrito
-      setCartCount(updatedItems.reduce((acc, item) => acc + item.quantity, 0));
-      return updatedItems;
+    // 3. Verificación final para asegurar sincronización
+    // (Opcional - solo si necesitas datos actualizados del servidor)
+    await fetchCart();
+
+    // Notificación de éxito
+    toast({
+      title: 'Cantidad actualizada',
+      status: 'success',
+      duration: 2000,
+      isClosable: true,
     });
-      toast({
-        title: 'Cantidad actualizada',
-        status: 'success',
-        duration: 2000,
-        isClosable: true,
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'No se pudo actualizar la cantidad',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
+
+  } catch (error) {
+    // Revertir en caso de error
+    console.error('Error al actualizar cantidad:', error);
+    
+    // Recuperar estado real del servidor
+    await fetchCart();
+    
+    // Notificación de error
+    toast({
+      title: 'Error',
+      description: error.response?.data?.message || 'No se pudo actualizar la cantidad',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    });
+    
+  } finally {
+    setIsUpdating(false);
+  }
+};
 
   const removeItem = async (itemId) => {
     try {
@@ -614,100 +643,107 @@ export default function Navbar() {
       </Collapse>
 
       {/* Drawer del carrito */}
-      {auth && (
-      <Drawer 
-        isOpen={isCartOpen} 
-        placement="right" 
-        onClose={onCartClose}
-        size={useBreakpointValue({ base: "full", md: "md" })}>
-        <DrawerOverlay />
-        <DrawerContent>
-          <DrawerCloseButton />
-          <DrawerHeader borderBottomWidth="1px">
-            Tu Carrito de Compras
-          </DrawerHeader>
+        {auth && (
+        <Drawer 
+          isOpen={isCartOpen} 
+          placement="right" 
+          onClose={onCartClose}
+          size={useBreakpointValue({ base: "full", md: "md" })}>
+          <DrawerOverlay />
+          <DrawerContent>
+            <DrawerCloseButton />
+            <DrawerHeader borderBottomWidth="1px">
+              Tu Carrito de Compras
+            </DrawerHeader>
 
-          <DrawerBody>
-            {cartItems.length === 0 ? (
-              <Text mt={4}>Tu carrito está vacío</Text>
-            ) : (
-              <Stack spacing={4} mt={4}>
-                {cartItems.map((item) => (
-                  <Box key={item.id}>
-                    <Flex>
-                      <Image
-                        rounded={'md'}
-                        alt={item.product?.name}
-                        src={`/api/product/image/${item.product.prodImage}`}
-                        objectFit={'cover'}
-                        width={'80px'}
-                        height={'80px'}
-                      />
-                      <Box ml={3} flex={1}>
-                        <Text fontWeight="bold">{item.product?.name}</Text>
-                        <Text>${item.product?.price?.toFixed(2) || '0.00'}</Text>
-                        
-                        <Flex mt={2} align="center">
-                          <NumberInput 
-                            size="sm" 
-                            maxW={20} 
-                            value={item.quantity}
-                            min={1}
-                            max={10}
-                            onChange={(_, valueAsNumber) => updateQuantity(item.product.id, valueAsNumber)}
-                            >
-                            <NumberInputField />
-                            <NumberInputStepper>
-                              <NumberIncrementStepper />
-                              <NumberDecrementStepper />
-                            </NumberInputStepper>
-                          </NumberInput>
+            <DrawerBody>
+              {cartItems.length === 0 ? (
+                <Text mt={4}>Tu carrito está vacío</Text>
+              ) : (
+                <Stack spacing={4} mt={4}>
+                  {cartItems.map((item) => (
+                    <Box key={item.product.id}>
+                      <Flex>
+                        <Image
+                          rounded={'md'}
+                          alt={item.product?.name}
+                          src={`/api/product/image/${item.product.prodImage}`}
+                          objectFit={'cover'}
+                          width={'80px'}
+                          height={'80px'}
+                        />
+                        <Box ml={3} flex={1}>
+                          <Text fontWeight="bold">{item.product?.name}</Text>
+                          <Text>${item.product?.price?.toFixed(2) || '0.00'}</Text>
                           
-                          <IconButton
-                            ml={2}
-                            icon={<FiTrash2 />}
-                            aria-label="Eliminar producto"
-                            size="sm"
-                            colorScheme="red"
-                            variant="ghost"
-                            onClick={() => removeItem(item.id)}
-                          />
-                        </Flex>
-                      </Box>
+                          <Flex mt={2} align="center">
+                            <NumberInput 
+                              size="sm" 
+                              maxW={20} 
+                              value={item.quantity}
+                              min={1}
+                              max={item.product.stock || 10}
+                              onChange={(valueString, valueAsNumber) => 
+                                updateQuantity(item.product.id, valueAsNumber)
+                              }
+                              isDisabled={isUpdating}
+                            >
+                              <NumberInputField />
+                              <NumberInputStepper>
+                                <NumberIncrementStepper />
+                                <NumberDecrementStepper />
+                              </NumberInputStepper>
+                            </NumberInput>
+                            
+                            <IconButton
+                              ml={2}
+                              icon={<FiTrash2 />}
+                              aria-label="Eliminar producto"
+                              size="sm"
+                              colorScheme="red"
+                              variant="ghost"
+                              onClick={() => removeItem(item.product.id)}
+                              isLoading={isUpdating}
+                            />
+                          </Flex>
+                        </Box>
+                      </Flex>
+                      <Divider my={3} />
+                    </Box>
+                  ))}
+                  
+                  <Box mt={4}>
+                    <Flex justify="space-between" fontWeight="bold">
+                      <Text>Total:</Text>
+                      <Text>${cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0).toFixed(2)}</Text>
                     </Flex>
-                    <Divider my={3} />
+                    
+                    <Button
+                      mt={4}
+                      colorScheme="pink"
+                      width="full"
+                      size="lg"
+                      onClick={goToCart}
+                      isLoading={isUpdating}
+                    >
+                      Proceder al Pago
+                    </Button>
+                    
+                    <Button
+                      mt={2}
+                      variant="outline"
+                      width="full"
+                      onClick={onCartClose}
+                      isLoading={isUpdating}
+                    >
+                      Seguir Comprando
+                    </Button>
                   </Box>
-                ))}
-                
-                <Box mt={4}>
-                  <Flex justify="space-between" fontWeight="bold">
-                    <Text>Total:</Text>
-                    <Text>${total.toFixed(2)}</Text>
-                    <Text>${cartItems?.product?.total}</Text>
-                  </Flex>
-                  
-                  <Button
-                    mt={4}
-                    colorScheme="pink"
-                    width="full"
-                    size="lg"
-                    onClick={goToCart}>
-                    Proceder al Pago
-                  </Button>
-                  
-                  <Button
-                    mt={2}
-                    variant="outline"
-                    width="full"
-                    onClick={onCartClose}>
-                    Seguir Comprando
-                  </Button>
-                </Box>
-              </Stack>
-            )}
-          </DrawerBody>
-        </DrawerContent>
-      </Drawer>
+                </Stack>
+              )}
+            </DrawerBody>
+          </DrawerContent>
+        </Drawer>
       )}
     </Box>
   );
