@@ -26,6 +26,7 @@ import {
 } from "@chakra-ui/react";
 import { Link as RouterLink, useParams, useNavigate } from 'react-router-dom';
 import { ChevronRightIcon, ChevronLeftIcon, StarIcon } from "@chakra-ui/icons";
+import { useAuth } from "../../hooks/useAuth";
 
 const Productos = () => {
   const { id } = useParams();
@@ -35,9 +36,9 @@ const Productos = () => {
   const toast = useToast();
   const navigate = useNavigate();
   const columns = useBreakpointValue({ base: 1, sm: 2, md: 3, lg: 3 });
-  // console.log(products);
-  useEffect(() => {
-   // Cambia esta parte del useEffect
+  const { auth } = useAuth()
+  console.log(auth?.name)
+  useEffect(() => {   
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -49,6 +50,7 @@ const Productos = () => {
       const productsResponse = await axios.get(`/api/product/subcategory/${id}`);
       // Asegúrate que productsResponse.data es un array
       setProducts(Array.isArray(productsResponse.data) ? productsResponse.data : []);
+      
     } catch (error) {
       // Manejo de errores
       toast({
@@ -62,7 +64,7 @@ const Productos = () => {
     }
 };
     fetchData();
-  }, [id]);
+  }, [id,toast]);
 
   if (loading) {
     return (
@@ -72,27 +74,67 @@ const Productos = () => {
     );
   }
     // añadiendo producto al carrito
-    const addToCart = async () => {
-      try {
-        const response = await axios.post('/api/cart/', { productId: product.id, quantity: 1 });
-        toast({
-          title: 'Producto agregado',
-          description: response.data.message,
-          status: 'success',
-          duration: 3000,
-          isClosable: true,
-        });
-      } catch (error) {
-        toast({
-          title: 'Error',
-          description: error.response?.data?.message || 'Error al agregar el producto al carrito',
-          status: 'error',
-          duration: 3000,
-          isClosable: true,
-        });
+ const addToCart = async (productId) => {
+  try {
+    // // Verificar autenticación
+    // if (!auth?.token) {
+    //   toast({
+    //     title: 'Debes iniciar sesión',
+    //     description: 'Necesitas estar logueado para agregar productos al carrito',
+    //     status: 'warning',
+    //     duration: 3000,
+    //     isClosable: true,
+    //   });
+    //   navigate('/login', { state: { from: location } });
+    //   return;
+    // }
+
+    // Validar productId
+    if (!productId) {
+      throw new Error('ID de producto no válido');
+    }
+
+    // Configurar headers
+    const config = {
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${auth.token}`
       }
     };
-  
+
+    // Llamar a la API
+    await axios.post(
+      '/api/cart',
+      { productId, quantity: 1 },
+      config
+    );
+
+    // Mostrar notificación de éxito con mensaje simple
+    toast({
+      title: 'Producto agregado',
+      description: 'El producto se ha añadido al carrito correctamente',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+
+  } catch (error) {
+    console.error('Error al agregar al carrito:', error);
+    
+    // Mensaje de error mejorado
+    const errorMessage = error.response?.data?.message || 
+                       error.message || 
+                       'Error al agregar el producto al carrito';
+    
+    toast({
+      title: 'Error',
+      description: errorMessage,
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+};
 
   return (
     <>
