@@ -133,7 +133,7 @@ export default function Navbar() {
   const toast = useToast();
   const navigate = useNavigate();
   const { auth } = useAuth(null);
-  console.log(cartItems)
+  
 
   const goToCart = () => {
     navigate('/cart');
@@ -241,29 +241,43 @@ export default function Navbar() {
   }
 };
 
-  const removeItem = async (itemId) => {
-    try {
-      setCartItems(prevItems => prevItems.filter(item => item.id !== itemId));
-      
-      // Aquí deberías hacer la llamada a tu API para eliminar
-      toast({
-        title: 'Producto eliminado',
-        status: 'success',
-        duration: 2000,
-        isClosable: true,
-      });
-    } catch (error) {
-      toast({
-        title: 'Error',
-        description: error.response?.data?.message || 'No se pudo eliminar el producto',
-        status: 'error',
-        duration: 3000,
-        isClosable: true,
-      });
-    }
-  };
+  const removeItem = async (productId) => {
+  try {
+    // Actualización optimista
+    setCartItems(prevItems => prevItems.filter(item => item.product.id !== productId));
+    setCartCount(prev => prev - 1);
+    
+    // Llamada a la API para eliminar el producto
+    await axios.delete(`/api/cart/${productId}`, {
+      headers: {
+        'Authorization': `Bearer ${auth?.token || ''}`,
+      }
+    });
+    
+    // Actualizar el carrito completo después de eliminar
+    await fetchCart();
+    
+    toast({
+      title: 'Producto eliminado',
+      status: 'success',
+      duration: 2000,
+      isClosable: true,
+    });
+  } catch (error) {
+    // Revertir en caso de error
+    await fetchCart();
+    
+    toast({
+      title: 'Error',
+      description: error.response?.data?.message || 'No se pudo eliminar el producto',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+};
 
-  const total = cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0);
+  // const total = cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0);
 
   const PisoSubNav = ({ items }) => {
     const hoverBg = useColorModeValue('pink.50', 'gray.900');
