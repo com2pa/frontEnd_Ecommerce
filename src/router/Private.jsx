@@ -8,6 +8,9 @@ import Aliquots from '../pagesPrivate/Aliquots';
 import Product from '../pagesPrivate/Product';
 import Brand from '../pagesPrivate/Brand';
 import PerfilUser from '../pagesPrivate/PerfilUser';
+import CreatOrder from '../pages/Facture/CreatOrder';
+import Payment from '../pages/Facture/Payment';
+import CartDetail from '../pages/Facture/CartDetail';
 const Private = () => {
   return (
     <>
@@ -20,6 +23,9 @@ const Private = () => {
           <Route path='/product' element={<Product/> } />
           <Route path='/brand' element={<Brand />} />
           <Route path='/profileUser' element={<PerfilUser />} />
+          <Route path='/order' element={<CreatOrder/>}/>
+          <Route path='/payment' element={<Payment/>}/>
+          <Route path='/detail' element={<CartDetail/>}/>
         </Route>
       </Routes>
     </>
