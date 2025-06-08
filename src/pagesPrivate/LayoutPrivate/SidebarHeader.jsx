@@ -30,6 +30,7 @@ import { IoMdPersonAdd } from 'react-icons/io';
 import { LuBookMinus, LuSchool } from 'react-icons/lu';
 import { GiSpellBook, GiTeacher } from 'react-icons/gi';
 import { PiStudentFill } from 'react-icons/pi';
+import { TbBasketDiscount } from "react-icons/tb";
 
 // Menú lateral
 const LinkItems = [
@@ -39,6 +40,7 @@ const LinkItems = [
   { name: 'Crear Alicuotas', icon: GiTeacher, to: '/aliquots' },
   { name: 'Marca', icon: IoMdPersonAdd, to: '/brand' },
   { name: 'Producto', icon: IoMdPersonAdd, to: '/product' },
+  { name: 'Descuento',icon:TbBasketDiscount ,to:'/discount'}
 ];
 
 const SidebarContent = ({ onClose, ...rest }) => {
