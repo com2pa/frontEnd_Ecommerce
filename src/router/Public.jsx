@@ -11,6 +11,7 @@ import Subcategorias from '../pages/Home/SubCategoria';
 import Productos from '../pages/Home/Productos';
 import DetalleProducto from '../pages/Home/DetalleProducto';
 import Index from '../pagesPrivate/Index';
+import Descuento from '../pages/Home/Descuento';
 
 
 export const Public = () => {
@@ -28,6 +29,7 @@ export const Public = () => {
         <Route path='/categorias/:id' element={<Subcategorias />} />
         <Route path='/subcategorias/:id/productos' element={<Productos />} />
         <Route path='/productos/:id' element={<DetalleProducto />} />
+        <Route path='/descuento' element={<Descuento/>}/>
          
       </Routes>
     </>

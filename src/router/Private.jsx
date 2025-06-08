@@ -11,6 +11,7 @@ import PerfilUser from '../pagesPrivate/PerfilUser';
 import CreatOrder from '../pages/Facture/CreatOrder';
 import Payment from '../pages/Facture/Payment';
 import CartDetail from '../pages/Facture/CartDetail';
+import Discount from '../pagesPrivate/Discount';
 const Private = () => {
   return (
     <>
@@ -26,6 +27,7 @@ const Private = () => {
           <Route path='/order' element={<CreatOrder/>}/>
           <Route path='/payment' element={<Payment/>}/>
           <Route path='/detail' element={<CartDetail/>}/>
+          <Route path='/discount' element={<Discount/>}/>
         </Route>
       </Routes>
     </>
