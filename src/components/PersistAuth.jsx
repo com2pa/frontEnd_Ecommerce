@@ -10,25 +10,39 @@ import { HashLoader } from 'react-spinners';
 
 const PersistAuth = () => {
   const location = useLocation();
-  const { auth, setAuth } = useAuth(null);
-  const [isLoading, setIsLoading] = useState(auth.name ? false : true);
+  const { auth, setAuth } = useAuth();
+  const [isLoading, setIsLoading] = useState(true);
   // console.log('inicio sesion',auth.name)
   // Obtener el usuario cada vez que cambia la url o se refresca la pagina para mantener la sesion persistida
   useEffect(() => {
-    const handleUser = async () => {
-      try {
-        const { data } = await axios.get('/api/refres');
-        setAuth(data);
-        // console.log(data.name);
+      let isMounted = true;
+      
+      const handleUser = async () => {
+        try {
+          const { data } = await axios.get('/api/refres');
+          if (isMounted) {
+            setAuth(data);
+            setIsLoading(false);
+          }
+        } catch (error) {
+          console.log(error);
+          if (isMounted) {
+            setIsLoading(false);
+            setAuth({});
+          }
+        }
+      };
+
+      if (!auth?.token) {
+        handleUser();
+      } else {
         setIsLoading(false);
-      } catch (error) {
-        console.log(error);
-        setIsLoading(false);
-        setAuth({});
       }
-    };
-    handleUser();
-  }, [setAuth]);
+      
+      return () => {
+        isMounted = false;
+      };
+    }, [setAuth, auth?.token]);
 
   //CUANDO CARGARDO EL USUARIO
   if (isLoading) {
@@ -43,6 +57,7 @@ const PersistAuth = () => {
       </div>
     );
   }
+  
 
   //cuando estdoy en home
   if (location.pathname === '/') {
@@ -72,5 +87,7 @@ const PersistAuth = () => {
     );
   }
 };
+
+
 
 export default PersistAuth;

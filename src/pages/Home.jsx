@@ -8,8 +8,7 @@ const Home = () => {
     <>
         <Menu /> 
           <div>
-            <Categoria />
-         
+            <Categoria />         
              <Outlet />
          </div>
       <PiePagina />

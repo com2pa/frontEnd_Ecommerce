@@ -13,18 +13,18 @@ import {
   Input,
   NumberInput,
   NumberInputField,
-  Select,
   Textarea,
   useToast,
   Switch,
   Flex,
   Box,
   Badge,
+  Text,
 } from '@chakra-ui/react';
 import axios from 'axios';
-import { format, parseISO } from 'date-fns';
+import { format} from 'date-fns';
 
-export const ModalDiscount = ({ isOpen, onClose, discount, onSuccess }) => {
+const ModalDiscount = ({ isOpen, onClose, discount, onSuccess }) => {
   const toast = useToast();
   const [formData, setFormData] = useState({
     code: '',
@@ -39,16 +39,16 @@ export const ModalDiscount = ({ isOpen, onClose, discount, onSuccess }) => {
 
   useEffect(() => {
     if (discount) {
-      // Formatear fechas para el input date
-      const startDate = format(parseISO(discount.start_date), 'yyyy-MM-dd');
-      const endDate = format(parseISO(discount.end_date), 'yyyy-MM-dd');
+      console.log('Discount data in modal:', discount); // Para debug
+      const startDate = format(new Date(discount.start_date), 'yyyy-MM-dd');
+      const endDate = format(new Date(discount.end_date), 'yyyy-MM-dd');
       
       setFormData({
         code: discount.code,
         percentage: discount.percentage,
         start_date: startDate,
         end_date: endDate,
-        productIds: discount.products.map(p => p.id).join('\n'),
+        productIds: discount.products.map(p => p._id).join('\n'),
         online: discount.online,
       });
     } else {
@@ -62,7 +62,6 @@ export const ModalDiscount = ({ isOpen, onClose, discount, onSuccess }) => {
       });
     }
 
-    // Cargar lista de productos
     const fetchProducts = async () => {
       try {
         const response = await axios.get('/api/product');
@@ -83,55 +82,48 @@ export const ModalDiscount = ({ isOpen, onClose, discount, onSuccess }) => {
   };
 
   const handleSubmit = async () => {
-    // Validación del porcentaje
-        if (formData.percentage <= 0 || formData.percentage >= 100) {
-            toast({
-            title: 'Error',
-            description: 'El porcentaje debe ser mayor que 0 y menor que 100',
-            status: 'error',
-            duration: 5000,
-            isClosable: true,
-            });
-            return;
-        }
-                // Validación de fechas
-        if (new Date(formData.start_date) >= new Date(formData.end_date)) {
-            toast({
-            title: 'Error',
-            description: 'La fecha de inicio debe ser anterior a la fecha de fin',
-            status: 'error',
-            duration: 5000,
-            isClosable: true,
-            });
-            return;
-        }
+    if (formData.percentage <= 0 || formData.percentage >= 100) {
+      toast({
+        title: 'Error',
+        description: 'El porcentaje debe ser mayor que 0 y menor que 100',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    if (new Date(formData.start_date) >= new Date(formData.end_date)) {
+      toast({
+        title: 'Error',
+        description: 'La fecha de inicio debe ser anterior a la fecha de fin',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
     try {
       setLoading(true);
       const payload = {
         ...formData,
         percentage: Number(formData.percentage),
-        productId: formData.productIds,
-    //      // No enviar el estado online, se calcula en el backend
-    //   online: undefined
+        productId: formData.productIds.split('\n').map(id => id.trim()).filter(id => id),
       };
-       
 
       if (discount) {
-        // Actualizar descuento existente
-        await axios.put(`/api/discount/${discount.id}`, payload);
+        await axios.patch(`/api/discount/${discount.id}`, payload);
         toast({
           title: 'Descuento actualizado',
-          description: 'El descuento se ha actualizado correctamente.',
           status: 'success',
           duration: 5000,
           isClosable: true,
         });
       } else {
-        // Crear nuevo descuento
         await axios.post('/api/discount', payload);
         toast({
           title: 'Descuento creado',
-          description: 'El descuento se ha creado correctamente.',
           status: 'success',
           duration: 5000,
           isClosable: true,
@@ -139,10 +131,10 @@ export const ModalDiscount = ({ isOpen, onClose, discount, onSuccess }) => {
       }
       onSuccess();
     } catch (error) {
-      console.log('Error al guardar descuento:', error);
+      console.error('Error al guardar descuento:', error);
       toast({
         title: 'Error',
-        description: error.response?.data?.error || 'Ocurrió un error al guardar el descuento',
+        description: error.response?.data?.error || 'Error al guardar el descuento',
         status: 'error',
         duration: 5000,
         isClosable: true,
@@ -174,7 +166,7 @@ export const ModalDiscount = ({ isOpen, onClose, discount, onSuccess }) => {
 
             <FormControl isRequired>
               <FormLabel>Porcentaje de descuento</FormLabel>
-              <NumberInput min={1} max={100} value={formData.percentage}>
+              <NumberInput min={1} max={99} value={formData.percentage}>
                 <NumberInputField
                   name="percentage"
                   onChange={handleChange}
@@ -207,13 +199,8 @@ export const ModalDiscount = ({ isOpen, onClose, discount, onSuccess }) => {
             <FormControl>
               <FormLabel>Estado</FormLabel>
               <Switch
-                // isChecked={formData.online}
-                // onChange={(e) =>
-                //   setFormData({ ...formData, online: e.target.checked })
-                // }
-                // colorScheme="green"
                 isChecked={formData.online}
-                isDisabled={true}  // Deshabilitar la edición manual
+                isDisabled={true}
                 colorScheme="green"
               >
                 <Box as="span" ml={2}>
@@ -224,18 +211,15 @@ export const ModalDiscount = ({ isOpen, onClose, discount, onSuccess }) => {
                   )}
                 </Box>
               </Switch>
-              {/* <Text fontSize="sm" color="gray.500" mt={1}>
-                El estado se calcula automáticamente según las fechas
-            </Text> */}
             </FormControl>
 
             <FormControl isRequired>
-              <FormLabel>IDs de Productos (separados por coma o nueva línea)</FormLabel>
+              <FormLabel>IDs de Productos (separados por nueva línea)</FormLabel>
               <Textarea
                 name="productIds"
                 value={formData.productIds}
                 onChange={handleChange}
-                placeholder="Ej: 12345, 67890"
+                placeholder="Ej: 12345\n67890"
                 rows={4}
               />
             </FormControl>
@@ -247,8 +231,8 @@ export const ModalDiscount = ({ isOpen, onClose, discount, onSuccess }) => {
                 </Text>
                 <Box maxH="200px" overflowY="auto" border="1px" borderColor="gray.200" p={2}>
                   {products.map((product) => (
-                    <Text key={product._id} fontSize="sm">
-                      {product._id} - {product.name} (${product.price})
+                    <Text key={product.id} fontSize="sm">
+                      {product.id} - {product.name} (${product.price})
                     </Text>
                   ))}
                 </Box>

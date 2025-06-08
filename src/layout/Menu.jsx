@@ -136,7 +136,7 @@ export default function Navbar() {
   
 
   const goToCart = () => {
-    navigate('/cart');
+    navigate('/detail');
     onCartClose();
   };
 // obteniendo los datos del carrito al cargar el componente
@@ -739,6 +739,7 @@ export default function Navbar() {
                       size="lg"
                       onClick={goToCart}
                       isLoading={isUpdating}
+                      
                     >
                       Proceder al Pago
                     </Button>

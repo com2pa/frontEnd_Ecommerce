@@ -18,8 +18,7 @@ import {
   AlertIcon,
 } from '@chakra-ui/react';
 import SidebarHeader from './LayoutPrivate/SidebarHeader';
-import DiscountCard from './DiscountCard';
-import { ModalDiscount } from './ModalDiscount';
+import ModalDiscount from './ModalDiscount'; // Importación corregida (sin llaves)
 import axios from 'axios';
 import { format } from 'date-fns';
 
@@ -29,7 +28,7 @@ const Discount = () => {
   const [error, setError] = useState(null);
   const [selectedDiscount, setSelectedDiscount] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
-console.log(discounts)
+
   useEffect(() => {
     fetchDiscounts();
   }, []);
@@ -48,6 +47,7 @@ console.log(discounts)
   };
 
   const handleEdit = (discount) => {
+    console.log('Editing discount:', discount); // Para debug
     setSelectedDiscount(discount);
     onOpen();
   };
@@ -109,7 +109,7 @@ console.log(discounts)
               <Tbody>
                 {discounts.length > 0 ? (
                   discounts.map((discount) => (
-                    <Tr key={discount._id}>
+                    <Tr key={discount.id}>
                       <Td fontWeight="bold">{discount.code}</Td>
                       <Td>{discount.percentage}%</Td>
                       <Td>
