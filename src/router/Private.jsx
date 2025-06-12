@@ -12,6 +12,7 @@ import CreatOrder from '../pages/Facture/CreatOrder';
 import Payment from '../pages/Facture/Payment';
 import CartDetail from '../pages/Facture/CartDetail';
 import Discount from '../pagesPrivate/Discount';
+import Bcv from '../pagesPrivate/Bcv';
 const Private = () => {
   return (
     <>
@@ -28,6 +29,7 @@ const Private = () => {
           <Route path='/payment' element={<Payment/>}/>
           <Route path='/detail' element={<CartDetail/>}/>
           <Route path='/discount' element={<Discount/>}/>
+          <Route path='/tasa' element={<Bcv/>}/>
         </Route>
       </Routes>
     </>
