@@ -121,6 +121,7 @@ const sesionItems = [
 
 export default function Navbar() {
   const { isOpen, onToggle } = useDisclosure();
+  const { authh, clearAuth } = useAuth(null);
   const { 
     isOpen: isCartOpen, 
     onOpen: onCartOpen, 
@@ -311,7 +312,28 @@ export default function Navbar() {
       </Stack>
     );
   };
-
+  const handleLogout = async () => {
+  try {
+    await axios.get('/api/logout');
+    clearAuth(); // Limpiar el estado de autenticación
+    navigate('/home');
+    
+    toast({
+      title: 'Sesión cerrada',
+      status: 'success',
+      duration: 3000,
+      isClosable: true,
+    });
+  } catch (error) {
+    toast({
+      title: 'Error',
+      description: error.response?.data?.message || 'Error al cerrar sesión',
+      status: 'error',
+      duration: 3000,
+      isClosable: true,
+    });
+  }
+};
 
 
   return (
@@ -433,8 +455,36 @@ export default function Navbar() {
           direction={'row'}
           spacing={6}>
           
-          {auth ? (
-            // Usuario autenticado
+          {!auth ? (
+            // Usuario no autenticado: SOLO mostrar login y registro
+            <>
+              <Button
+                as={'a'}
+                href="/login"
+                fontSize={'sm'}
+                fontWeight={400}
+                variant={'link'}
+                leftIcon={<Icon as={FiUser} />}
+                display={{ base: 'none', md: 'inline-flex' }}>
+                Login
+              </Button>
+              <Button
+                as={'a'}
+                href="/register"
+                fontSize={'sm'}
+                fontWeight={600}
+                color={'white'}
+                bg={'pink.400'}
+                _hover={{
+                  bg: 'pink.300',
+                }}
+                display={{ base: 'none', md: 'inline-flex' }}>
+                Registrarse
+              </Button>
+            </>
+           
+          ) : (
+             // Usuario autenticado
             <>
               <Button
                 as={'a'}
@@ -462,11 +512,11 @@ export default function Navbar() {
                 <MenuList>
                   <MenuItem>Mis pedidos</MenuItem>
                   <MenuItem>Lista de deseos</MenuItem>
-                  {auth.role === 'admin' && (
+                  {/* {auth.role === 'admin' && ( */}
                     <MenuItem as="a" href="/dashboard">Dashboard</MenuItem>
-                  )}
+                  {/* // )} */}
                   <MenuDivider />
-                  <MenuItem>Cerrar sesión</MenuItem>
+                  {/* <MenuItem onClick={handleLogout} >Cerrar sesión</MenuItem> */}
                 </MenuList>
               </Menu>
 
@@ -492,33 +542,6 @@ export default function Navbar() {
                   borderRadius="full">
                   {cartCount}
                 </Badge>
-              </Button>
-            </>
-          ) : (
-            // Usuario no autenticado: SOLO mostrar login y registro
-            <>
-              <Button
-                as={'a'}
-                href="/login"
-                fontSize={'sm'}
-                fontWeight={400}
-                variant={'link'}
-                leftIcon={<Icon as={FiUser} />}
-                display={{ base: 'none', md: 'inline-flex' }}>
-                Login
-              </Button>
-              <Button
-                as={'a'}
-                href="/register"
-                fontSize={'sm'}
-                fontWeight={600}
-                color={'white'}
-                bg={'pink.400'}
-                _hover={{
-                  bg: 'pink.300',
-                }}
-                display={{ base: 'none', md: 'inline-flex' }}>
-                Registrarse
               </Button>
             </>
           )}
@@ -602,57 +625,57 @@ export default function Navbar() {
           </Button>
           
           {/* Sesión móvil */}
-         {auth ? (
-  // Usuario autenticado (versión móvil)
-  <>
-    <Button 
-      as="a" 
-      href="#"
-      variant="ghost"
-      justifyContent="flex-start"
-      leftIcon={<Icon as={FiUser} />}>
-      Hola, {auth.name}
-    </Button>
-    <Button 
-      as="a" 
-      href="#"
-      variant="ghost"
-      justifyContent="flex-start"
-      leftIcon={<Icon as={FiArchive} />}>
-      Mis pedidos
-    </Button>
-    {auth.role === 'admin' && (
-      <Button 
-        as="a" 
-        href="/dashboard"
-        variant="ghost"
-        justifyContent="flex-start"
-        leftIcon={<Icon as={FiArchive} />}>
-        Dashboard
-      </Button>
-    )}
-  </>
-) : (
-  // Usuario no autenticado (versión móvil)
-  <>
-    <Button
-      as="a"
-      href="/login"
-      variant="ghost"
-      justifyContent="flex-start"
-      leftIcon={<Icon as={FiUser} />}>
-      Login
-    </Button>
-    <Button
-      as="a"
-      href="/register"
-      variant="ghost"
-      justifyContent="flex-start"
-      leftIcon={<Icon as={FiArchive} />}>
-      Registrarse
-    </Button>
-  </>
-)}
+         {!auth ? (
+           // Usuario no autenticado (versión móvil)
+            <>
+              <Button
+                as="a"
+                href="/login"
+                variant="ghost"
+                justifyContent="flex-start"
+                leftIcon={<Icon as={FiUser} />}>
+                Login
+              </Button>
+              <Button
+                as="a"
+                href="/register"
+                variant="ghost"
+                justifyContent="flex-start"
+                leftIcon={<Icon as={FiArchive} />}>
+                Registrarse
+              </Button>
+            </>
+          ) : (
+             // Usuario autenticado (versión móvil)
+            <>
+              <Button 
+                as="a" 
+                href="#"
+                variant="ghost"
+                justifyContent="flex-start"
+                leftIcon={<Icon as={FiUser} />}>
+                Hola, {auth.name}
+              </Button>
+              <Button 
+                as="a" 
+                href="#"
+                variant="ghost"
+                justifyContent="flex-start"
+                leftIcon={<Icon as={FiArchive} />}>
+                Mis pedidos
+              </Button>
+              {/* {auth.role === 'admin' && ( */}
+                <Button 
+                  as="a" 
+                  href="/dashboard"
+                  variant="ghost"
+                  justifyContent="flex-start"
+                  leftIcon={<Icon as={FiArchive} />}>
+                  Dashboard
+                </Button>
+              {/* )} */}
+            </>
+          )}
         </Stack>
       </Collapse>
 

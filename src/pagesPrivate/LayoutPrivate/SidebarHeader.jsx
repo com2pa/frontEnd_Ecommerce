@@ -152,6 +152,10 @@ const MobileNav = ({ onOpen, ...rest }) => {
   const handleLogout = async () => {
     try {
       const response = await axios.get('/api/logout');
+      // Limpiar el estado de autenticación
+      if (auth?.clearAuth) {
+        auth.clearAuth(); 
+      }
       navigate('/home');
 
       toast({
