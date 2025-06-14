@@ -107,6 +107,8 @@ const Payment = () => {
     fetchCartAndRates();
   }, [auth?.token, navigate, toast]);
 
+  
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -215,8 +217,9 @@ const Payment = () => {
 
   if (isLoading) {
     return (
-      <Flex justify="center" align="center" minH="60vh">
+      <Flex justify="center" align="center" minH="60vh" flexDir={'column'}>
         <Spinner size="xl" />
+        <Text>Cargando datos y actualizando tasa</Text>
       </Flex>
     );
   }
