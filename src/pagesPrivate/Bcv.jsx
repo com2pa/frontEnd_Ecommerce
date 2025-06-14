@@ -70,7 +70,13 @@ const fetchLatestRates = async () => {
       isClosable: true,
     });
   } catch (error) {
-    // ... manejo de errores
+    toast({
+      title: 'Error al obtener la tasa mas reciente.',
+        description: error.response?.data?.error || 'Error desconocido',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+    })
   } finally {
     setIsLoading(false);
   }
@@ -97,7 +103,15 @@ const fetchLatestRates = async () => {
           fecha: moment(date).format('YYYY-MM-DD')
         }
       });
-      setHistoricalRate(response.data);
+       const rateData = {
+      moneda: response.data.moneda || currency,
+      tasa: response.data.tasa_oficial || response.data.tasa,
+      unidad_medida: response.data.unidad_medida || 'VES',
+      fecha: response.data.fecha || date,
+      fuente_url: response.data.fuente_url || 'https://www.bcv.org.ve'
+    };
+
+    setHistoricalRate(rateData);
       toast({
         title: 'Consulta exitosa',
         description: `Tasa histórica para ${currency} obtenida`,
