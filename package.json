@@ -28,6 +28,7 @@
     "react-router": "^7.5.3",
     "react-router-dom": "^7.5.3",
     "react-spinners": "^0.17.0",
+    "swr": "^2.3.3",
     "tailwindcss": "^4.1.4"
   },
   "devDependencies": {
