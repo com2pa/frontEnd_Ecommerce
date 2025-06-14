@@ -13,6 +13,8 @@ import Payment from '../pages/Facture/Payment';
 import CartDetail from '../pages/Facture/CartDetail';
 import Discount from '../pagesPrivate/Discount';
 import Bcv from '../pagesPrivate/Bcv';
+import RolesUser from '../pagesPrivate/RolesUser';
+import ConectUser from '../pagesPrivate/ConectUser';
 const Private = () => {
   return (
     <>
@@ -30,6 +32,8 @@ const Private = () => {
           <Route path='/detail' element={<CartDetail/>}/>
           <Route path='/discount' element={<Discount/>}/>
           <Route path='/tasa' element={<Bcv/>}/>
+          <Route path='/role-user' element={<RolesUser/>}/>
+          <Route path='/conectados' element={<ConectUser/>}/>
         </Route>
       </Routes>
     </>
