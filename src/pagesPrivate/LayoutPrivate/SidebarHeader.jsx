@@ -72,15 +72,36 @@ const SidebarContent = ({ onClose, ...rest }) => {
         </Heading>
         <CloseButton display={{ base: 'flex', md: 'none' }} onClick={onClose} />
       </Flex>
-      {LinkItems.map((link) => (
-        <NavItem
+      {/* Contenedor con scroll */}
+      <Box 
+        overflowY="auto" 
+        h="calc(100% - 80px)" // Ajusta la altura restando el espacio del encabezado
+        css={{
+          '&::-webkit-scrollbar': {
+            width: '4px',
+          },
+          '&::-webkit-scrollbar-track': {
+            background: useColorModeValue('#f1f1f1', '#2D3748'),
+          },
+          '&::-webkit-scrollbar-thumb': {
+            background: useColorModeValue('#CBD5E0', '#4A5568'),
+            borderRadius: '4px',
+          },
+          '&::-webkit-scrollbar-thumb:hover': {
+            background: useColorModeValue('#A0AEC0', '#718096'),
+          }
+        }}
+        >
+        {LinkItems.map((link) => (
+          <NavItem
           key={link.name}
           icon={link.icon}
           name={link.name}
           to={link.to}
           onClick={onClose}
-        />
-      ))}
+          />
+        ))}
+        </Box>
     </Box>
   );
 };
@@ -150,7 +171,13 @@ const MobileNav = ({ onOpen, ...rest }) => {
       });
     }
   };
-
+  
+  // Opciones para el menú horizontal
+  const horizontalMenuItems = [
+    { name: 'Dashboard', icon: FiHome, to: '/dashboard' },
+    { name: 'Productos', icon: IoMdPersonAdd, to: '/product' },
+    { name: 'Reportes', icon: GiSpellBook, to: '#' },
+  ];
   return (
     <Flex
       ml={{ base: 0, md: 60 }}
@@ -170,7 +197,32 @@ const MobileNav = ({ onOpen, ...rest }) => {
         aria-label="open menu"
         icon={<FiMenu />}
       />
-
+        {/* Menú horizontal - solo visible en desktop (md y arriba) */}
+      <HStack 
+        display={{ base: 'none', md: 'flex' }} 
+        spacing={4}
+        flex="1"
+        ml={4}
+      >
+        {horizontalMenuItems.map((item) => (
+          <Link
+            key={item.name}
+            as={ReactRouterLink}
+            to={item.to}
+            p={2}
+            rounded={'md'}
+            _hover={{
+              textDecoration: 'none',
+              bg: useColorModeValue('gray.200', 'gray.700'),
+            }}
+          >
+            <HStack>
+              <Icon as={item.icon} />
+              <Text>{item.name}</Text>
+            </HStack>
+          </Link>
+        ))}
+      </HStack>
       <Heading
         display={{ base: 'flex', md: 'none' }}
         fontSize="md"
