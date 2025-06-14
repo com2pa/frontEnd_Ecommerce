@@ -12,6 +12,7 @@ import Productos from '../pages/Home/Productos';
 import DetalleProducto from '../pages/Home/DetalleProducto';
 import Index from '../pagesPrivate/Index';
 import Descuento from '../pages/Home/Descuento';
+import ContactPage from '../pages/Contact';
 
 
 export const Public = () => {
@@ -30,6 +31,7 @@ export const Public = () => {
         <Route path='/subcategorias/:id/productos' element={<Productos />} />
         <Route path='/productos/:id' element={<DetalleProducto />} />
         <Route path='/descuento' element={<Descuento/>}/>
+        <Route path='/contactame' element={<ContactPage/>}/>
          
       </Routes>
     </>
