@@ -111,7 +111,7 @@ const pisoDos = [
 ];
 
 const callsToAction = [
-  { name: 'Contacto', href: '#', icon: FiPhone },
+  { name: 'Contacto', href: '/contactame', icon: FiPhone },
 ];
 
 const sesionItems = [
@@ -377,6 +377,9 @@ export default function Navbar() {
 
           <Flex display={{ base: 'none', md: 'flex' }} ml={10}>
             <Stack direction={'row'} spacing={4}>
+              <Box as="a" p={2} href={'/home'} fontSize={'sm'} fontWeight={500}>
+                Home
+              </Box>
               {/* Menú Piso Uno */}
               <Box>
                 <Popover trigger={'hover'} placement={'bottom-start'}>
@@ -441,7 +444,7 @@ export default function Navbar() {
               <Box as="a" p={2} href={'#'} fontSize={'sm'} fontWeight={500}>
                 Ofertas
               </Box>
-              <Box as="a" p={2} href={'#'} fontSize={'sm'} fontWeight={500}>
+              <Box as="a" p={2} href={'/contactame'} fontSize={'sm'} fontWeight={500}>
                 Contacto
               </Box>
             </Stack>
