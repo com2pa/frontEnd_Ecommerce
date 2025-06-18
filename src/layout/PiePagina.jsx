@@ -1,3 +1,5 @@
+import axios from 'axios';
+import { useEffect, useState } from 'react';
 import {
   FaFacebook,
   FaInstagram,
@@ -10,6 +12,21 @@ import {
 } from 'react-icons/fa';
 
 export default function Footer() {
+  const [version, setVersion] = useState('');
+  useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const response = await axios('/api/version');      
+        setVersion(response.data.version); // Guarda la versión en el estado
+        
+      } catch (error) {
+         console.error('Error al obtener la versión:', error);
+          setVersion('Desconocida'); // Manejo de error, puedes ajustar según tus necesidades
+      }
+    }
+    fetchData()
+  }, []);
+
   return (
     <footer className='bg-gray-900 text-white pt-12 pb-6'>
       <div className='container mx-auto px-4'>
@@ -111,7 +128,8 @@ export default function Footer() {
               />
             </div>
             <p className='text-sm text-gray-400'>
-              Transacciones 100% seguras con encriptación SSL
+              {/* llamando a la api */}
+
             </p>
           </div>
         </div>
@@ -130,7 +148,7 @@ export default function Footer() {
               href='#'
               className='text-gray-400 hover:text-indigo-400 text-sm transition'
             >
-              Términos y Condiciones
+              Términos y Condiciones 
             </a>
             <a
               href='#'
@@ -143,7 +161,10 @@ export default function Footer() {
               className='text-gray-400 hover:text-indigo-400 text-sm transition'
             >
               Preguntas Frecuentes
-            </a>
+            </a> 
+            <p className='text-gray-400 text-sm hover:text-red-400 transition'>
+              {version && `Versión: ${version}`}
+            </p>               
           </div>
         </div>
       </div>
