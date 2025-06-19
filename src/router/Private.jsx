@@ -15,6 +15,7 @@ import Discount from '../pagesPrivate/Discount';
 import Bcv from '../pagesPrivate/Bcv';
 import RolesUser from '../pagesPrivate/RolesUser';
 import ConectUser from '../pagesPrivate/ConectUser';
+import AuditLog from '../pagesPrivate/AuditLog';
 const Private = () => {
   return (
     <>
@@ -34,6 +35,7 @@ const Private = () => {
           <Route path='/tasa' element={<Bcv/>}/>
           <Route path='/role-user' element={<RolesUser/>}/>
           <Route path='/conectados' element={<ConectUser/>}/>
+          <Route path='/auditoria' element={<AuditLog />} />
         </Route>
       </Routes>
     </>
