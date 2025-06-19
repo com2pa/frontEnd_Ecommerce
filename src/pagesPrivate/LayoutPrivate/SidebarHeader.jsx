@@ -31,7 +31,7 @@ import { LuBookMinus, LuSchool } from 'react-icons/lu';
 import { GiSpellBook, GiTeacher } from 'react-icons/gi';
 import { PiStudentFill } from 'react-icons/pi';
 import { TbBasketDiscount } from "react-icons/tb";
-import { FaDollarSign } from 'react-icons/fa';
+import { FaDollarSign, FaFile } from 'react-icons/fa';
 import { FaUserCheck, FaUsers } from "react-icons/fa6";
 
 // Menú lateral
@@ -181,6 +181,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
     { name: 'Dashboard', icon: FiHome, to: '/dashboard' },
     { name: 'Productos', icon: IoMdPersonAdd, to: '/product' },
     { name: 'Reportes', icon: GiSpellBook, to: '#' },
+    { name: 'Auditoria', icon: FaFile, to: '/auditoria' },
   ];
   return (
     <Flex
