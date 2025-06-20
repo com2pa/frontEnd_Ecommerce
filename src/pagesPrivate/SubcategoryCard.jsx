@@ -14,6 +14,7 @@ import {
 import { FaEdit, FaTrash } from 'react-icons/fa';
 
 const SubcategoryCard = ({ subCategoria, onDelete, onEdit }) => {
+  console.log('subCategoria', subCategoria);
   return (
     <Box overflowX='auto'>
       <Table variant='simple'>
@@ -33,7 +34,7 @@ const SubcategoryCard = ({ subCategoria, onDelete, onEdit }) => {
                 <Td>
                   <Badge colorScheme='blue'>{subcategory.code}</Badge>
                 </Td>
-                <Td>{subcategory?.category?.name}</Td>
+                <Td>{subcategory.category?.name}</Td>
                 <Td>
                   <Flex gap={2}>
                     <IconButton

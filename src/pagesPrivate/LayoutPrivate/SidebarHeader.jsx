@@ -145,17 +145,19 @@ const NavItem = ({ icon, name, to, onClick, ...rest }) => {
 };
 
 const MobileNav = ({ onOpen, ...rest }) => {
-  const { auth } = useAuth();
+  const { auth, clearAuth } = useAuth();
   const navigate = useNavigate();
   const toast = useToast();
 
   const handleLogout = async () => {
+   
     try {
       const response = await axios.get('/api/logout');
       // Limpiar el estado de autenticación
-      if (auth?.clearAuth) {
-        auth.clearAuth(); 
-      }
+      // if (auth?.clearAuth) {
+        // auth.clearAuth(); 
+      // }
+      clearAuth()
       navigate('/home');
 
       toast({

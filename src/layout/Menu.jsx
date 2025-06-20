@@ -121,7 +121,7 @@ const sesionItems = [
 
 export default function Navbar() {
   const { isOpen, onToggle } = useDisclosure();
-  const { authh, clearAuth } = useAuth(null);
+  const { auth, clearAuth } = useAuth(null);
   const { 
     isOpen: isCartOpen, 
     onOpen: onCartOpen, 
@@ -133,7 +133,7 @@ export default function Navbar() {
    const [isUpdating, setIsUpdating] = useState(false); // Nuevo estado para controlar actualizaciones
   const toast = useToast();
   const navigate = useNavigate();
-  const { auth } = useAuth(null);
+  // const { auth } = useAuth(null);
   
 
   const goToCart = () => {
@@ -519,7 +519,7 @@ export default function Navbar() {
                     <MenuItem as="a" href="/dashboard">Dashboard</MenuItem>
                   {/* // )} */}
                   <MenuDivider />
-                  {/* <MenuItem onClick={handleLogout} >Cerrar sesión</MenuItem> */}
+                  <MenuItem onClick={handleLogout} >Cerrar sesión</MenuItem>
                 </MenuList>
               </Menu>
 
