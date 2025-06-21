@@ -13,6 +13,7 @@ import DetalleProducto from '../pages/Home/DetalleProducto';
 import Index from '../pagesPrivate/Index';
 import Descuento from '../pages/Home/Descuento';
 import ContactPage from '../pages/Contact';
+import Ofertas from '../pages/Ofertas';
 
 
 export const Public = () => {
@@ -30,9 +31,8 @@ export const Public = () => {
         <Route path='/categorias/:id' element={<Subcategorias />} />
         <Route path='/subcategorias/:id/productos' element={<Productos />} />
         <Route path='/productos/:id' element={<DetalleProducto />} />
-        <Route path='/descuento' element={<Descuento/>}/>
-        <Route path='/contactame' element={<ContactPage/>}/>
-         
+        <Route path='/descuento' element={<Ofertas/>}/>
+        <Route path='/contactame' element={<ContactPage/>}/>         
       </Routes>
     </>
   );
