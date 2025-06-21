@@ -3,15 +3,18 @@ import Menu from '../layout/Menu';
 import PiePagina from '../layout/PiePagina';
 import Categoria from './Home/Categoria';
 import { Outlet } from 'react-router-dom';
-import Descuento from './Home/Descuento';
+import CarouselComponent from './Home/CarouselComponent';
+import CallAction from './Home/CallAction';
 const Home = () => {
   return (
     <>
         <Menu /> 
           <div>
+            <CarouselComponent />
              <Outlet />
             <Categoria />
-            <Descuento/>         
+            <CallAction/>
+            
          </div>
       <PiePagina />
     </>
