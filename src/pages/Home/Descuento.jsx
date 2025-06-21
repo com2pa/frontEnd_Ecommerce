@@ -6,12 +6,15 @@ import {
   Badge,
   Flex,
   Stack,
-  useDisclosure,
   Button,
   Skeleton,
-  useToast
+  useToast,
+  Center,
+  VStack,
+  Icon
 } from '@chakra-ui/react';
 import axios from 'axios';
+import { FiTag } from 'react-icons/fi';
 
 const DiscountCard = ({ discount }) => {
   const formatPrice = (price) => {
@@ -64,14 +67,6 @@ const DiscountCard = ({ discount }) => {
               <Text fontSize="sm" fontWeight="medium">
                 {product.name}
               </Text>
-              {/* <Flex justify="space-between">
-                <Text fontSize="sm" textDecoration="line-through" color="gray.500">
-                  {formatPrice(product.price)}
-                </Text>
-                <Text fontSize="sm" fontWeight="bold" color="green.600">
-                  {formatPrice(product.discountedPrice)}
-                </Text>
-              </Flex> */}
             </Box>
           ))}
           {discount.products.length > 3 && (
@@ -113,7 +108,7 @@ const Descuento = () => {
       } catch (error) {
         toast({
           title: 'Error',
-          description: error.response?.data?.message,
+          description: error.response?.data?.message || 'Error al cargar descuentos',
           status: 'error',
           isClosable: true,
         });
@@ -124,6 +119,17 @@ const Descuento = () => {
 
     fetchDiscounts();
   }, [toast]);
+
+  const filterActiveDiscounts = (discounts) => {
+    const currentDate = new Date();
+    return discounts.filter(discount => {
+      const startDate = new Date(discount.start_date);
+      const endDate = new Date(discount.end_date);
+      return startDate <= currentDate && endDate >= currentDate;
+    });
+  };
+
+  const activeDiscounts = filterActiveDiscounts(discounts);
 
   return (
     <Box maxW="6xl" mx="auto" px={4} py={6} bg="gray.50" borderRadius="xl">
@@ -137,12 +143,27 @@ const Descuento = () => {
             <Skeleton key={i} height="180px" borderRadius="lg" />
           ))}
         </SimpleGrid>
-      ) : (
+      ) : activeDiscounts.length > 0 ? (
         <SimpleGrid columns={{ base: 1, sm: 2, md: 3 }} spacing={4}>
-          {discounts.map((discount) => (
+          {activeDiscounts.map((discount) => (
             <DiscountCard key={discount._id} discount={discount} />
           ))}
         </SimpleGrid>
+      ) : (
+        <Center py={10}>
+          <VStack spacing={4}>
+            <Icon as={FiTag} boxSize={10} color="gray.400" />
+            <Text fontSize="lg" color="gray.500" textAlign="center">
+              No hay descuentos activos en este momento
+            </Text>
+            <Text fontSize="sm" color="gray.400">
+              Vuelve a revisar más tarde o suscríbete para recibir ofertas
+            </Text>
+            <Button colorScheme="blue" variant="outline" size="sm">
+              Suscribirse a ofertas
+            </Button>
+          </VStack>
+        </Center>
       )}
     </Box>
   );
