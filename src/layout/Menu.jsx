@@ -381,7 +381,7 @@ export default function Navbar() {
                 Home
               </Box>
               {/* Menú Piso Uno */}
-              <Box>
+              {/* <Box>
                 <Popover trigger={'hover'} placement={'bottom-start'}>
                   <PopoverTrigger>
                     <Box
@@ -408,10 +408,10 @@ export default function Navbar() {
                     <PisoSubNav items={pisoUno} />
                   </PopoverContent>
                 </Popover>
-              </Box>
+              </Box> */}
               
               {/* Menú Piso Dos */}
-              <Box>
+              {/* <Box>
                 <Popover trigger={'hover'} placement={'bottom-start'}>
                   <PopoverTrigger>
                     <Box
@@ -438,10 +438,10 @@ export default function Navbar() {
                     <PisoSubNav items={pisoDos} />
                   </PopoverContent>
                 </Popover>
-              </Box>
+              </Box> */}
               
               {/* Otros enlaces */}
-              <Box as="a" p={2} href={'#'} fontSize={'sm'} fontWeight={500}>
+              <Box as="a" p={2} href={'/descuento'} fontSize={'sm'} fontWeight={500}>
                 Ofertas
               </Box>
               <Box as="a" p={2} href={'/contactame'} fontSize={'sm'} fontWeight={500}>
