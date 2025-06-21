@@ -13,8 +13,7 @@ const Home = () => {
             <CarouselComponent />
              <Outlet />
             <Categoria />
-            <CallAction/>
-            
+            <CallAction/>            
          </div>
       <PiePagina />
     </>
