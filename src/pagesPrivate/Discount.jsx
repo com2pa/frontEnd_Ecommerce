@@ -16,6 +16,7 @@ import {
   Spinner,
   Alert,
   AlertIcon,
+  useToast,
 } from '@chakra-ui/react';
 import SidebarHeader from './LayoutPrivate/SidebarHeader';
 import ModalDiscount from './ModalDiscount'; // Importación corregida (sin llaves)
@@ -28,7 +29,7 @@ const Discount = () => {
   const [error, setError] = useState(null);
   const [selectedDiscount, setSelectedDiscount] = useState(null);
   const { isOpen, onOpen, onClose } = useDisclosure();
-
+  const toast = useToast();
   useEffect(() => {
     fetchDiscounts();
   }, []);
@@ -80,6 +81,26 @@ const Discount = () => {
           </Heading>
           <Button colorScheme="blue" onClick={handleCreate}>
             Crear Descuento
+          </Button>
+          <Button 
+            colorScheme="orange" 
+            mr={2}
+            onClick={async () => {
+              try {
+                await axios.post('/api/discount/update-status');
+                fetchDiscounts();
+                toast({
+                  title: 'Estados actualizados',
+                  status: 'success',
+                  duration: 3000,
+                  isClosable: true,
+                });
+              } catch (err) {
+                console.error(err);
+              }
+            }}
+          >
+            Actualizar Estados
           </Button>
         </Flex>
 
