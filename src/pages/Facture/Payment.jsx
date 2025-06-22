@@ -53,7 +53,7 @@ const Payment = () => {
   });
   const [exchangeRates, setExchangeRates] = useState({ USD: 1, EUR: 0.85, lastUpdated: new Date() });
   const { isOpen: isInvoiceOpen, onToggle: toggleInvoice } = useDisclosure({ defaultIsOpen: true });
-  
+  const [availableAliquots, setAvailableAliquots] = useState([]);
   const toast = useToast();
   const navigate = useNavigate();
   const { auth } = useAuth();
@@ -62,14 +62,18 @@ const Payment = () => {
     const fetchCartAndRates = async () => {
       try {
         // Obtener carrito
-        const [cartResponse, ratesResponse] = await Promise.all([
+        const [cartResponse, ratesResponse,aliquotsResponse] = await Promise.all([
           axios.get('/api/cart', {
             headers: {
               'Authorization': `Bearer ${auth?.token || ''}`,
             }
           }),
-          axios.get('/api/tasas-bcv/latest')
+          axios.get('/api/tasas-bcv/latest'),
+          axios.get('/api/aliquots')
         ]);
+        setAvailableAliquots(aliquotsResponse.data);
+        // console.log('Available Aliquots:', aliquotsResponse.data);
+        console.log('Cart Response:', cartResponse.data);
 
         if (cartResponse.data.items.length === 0) {
           navigate('/cart');
@@ -126,36 +130,47 @@ const Payment = () => {
     }).format(value);
   };
 
-  // Calcular totales
+  // Calcular totales  
   const calculateTotals = () => {
     const subtotal = cartItems.reduce(
       (sum, item) => sum + (item.product?.price || 0) * item.quantity, 0
     );
-
-    // Calcular impuestos (IVA 16% en VES)
-    const taxRate = 0.16;
-    const taxesVES = subtotal * exchangeRates.USD * taxRate;
-    
+  
     // Calcular comisión por método de pago (3% para tarjetas)
     const paymentFee = paymentMethod === 'credit' ? subtotal * 0.03 : 0;
-    
+
+    // Inicializar impuestos para todas las alícuotas disponibles
+    const taxesByAliquot = {};
+    availableAliquots.forEach(aliquot => {
+      taxesByAliquot[`${aliquot.percentage}%`] = 0;
+    });
+
+    // Calcular impuestos por producto
+    cartItems.forEach(item => {
+      const aliquotRate = (item.product?.aliquots?.percentage || 8) / 100; // Usar 16% como default si no hay alícuota
+      const taxKey = `${aliquotRate * 100}%`;
+      
+      taxesByAliquot[taxKey] += (item.product.price * item.quantity * exchangeRates.USD * aliquotRate);
+    });
+
     // Calcular totales en diferentes divisas
     const totals = {
       USD: subtotal + paymentFee,
       EUR: (subtotal + paymentFee) * (1 / exchangeRates.EUR),
-      VES: (subtotal + paymentFee) * exchangeRates.USD + taxesVES
+      VES: (subtotal + paymentFee) * exchangeRates.USD + Object.values(taxesByAliquot).reduce((sum, tax) => sum + tax, 0)
     };
 
     return {
       subtotal,
-      taxesVES,
+      taxesByAliquot,
       paymentFee,
-      totals,
-      taxRate
+      totals
     };
   };
 
-  const { subtotal, taxesVES, paymentFee, totals, taxRate } = calculateTotals();
+    // Actualizar la desestructuración para usar taxesByAliquot en lugar de taxesVES
+    const { subtotal, taxesByAliquot, paymentFee, totals } = calculateTotals();
+
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -472,10 +487,14 @@ const Payment = () => {
 
                     <Divider my={2} />
 
-                    <Flex justify="space-between">
-                      <Text>IVA ({taxRate * 100}%):</Text>
-                      <Text>{formatCurrency(taxesVES, 'VES')}</Text>
-                    </Flex>
+                    {Object.entries(taxesByAliquot).map(([aliquot, amount]) => (
+                      amount > 0 && ( // Solo mostrar si hay monto para esta alícuota
+                        <Flex key={aliquot} justify="space-between">
+                          <Text>IVA ({aliquot}):</Text>
+                          <Text>{formatCurrency(amount, 'VES')}</Text>
+                        </Flex>
+                      )
+                    ))}
 
                     <Divider my={2} />
 
