@@ -147,7 +147,7 @@ const Payment = () => {
 
     // Calcular impuestos por producto
     cartItems.forEach(item => {
-      const aliquotRate = (item.product?.aliquots?.percentage || 8) / 100; // Usar 16% como default si no hay alícuota
+      const aliquotRate = (item.product?.aliquots?.percentage ) / 100; 
       const taxKey = `${aliquotRate * 100}%`;
       
       taxesByAliquot[taxKey] += (item.product.price * item.quantity * exchangeRates.USD * aliquotRate);
