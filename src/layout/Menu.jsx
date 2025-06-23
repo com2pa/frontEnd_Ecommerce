@@ -47,7 +47,7 @@ import { FiUser, FiShoppingCart, FiTrash2, FiPlus, FiArchive, FiPhone, FiTag } f
 import { useEffect, useState,useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-import { Disclosure, DisclosureButton, DisclosurePanel } from '@headlessui/react';
+// import {  } from '@chakra-ui/react';
 import { useAuth } from '../hooks/useAuth';
 // Datos de categorías (de Menu.jsx)
 const pisoUno = [
@@ -130,7 +130,9 @@ export default function Navbar() {
   
   const [cartItems, setCartItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
-   const [isUpdating, setIsUpdating] = useState(false); // Nuevo estado para controlar actualizaciones
+  const [isUpdating, setIsUpdating] = useState(false); // Nuevo estado para controlar actualizaciones
+  // const [isPisoUnoOpen, setIsPisoUnoOpen] = useState(false);
+  // const [isPisoDosOpen, setIsPisoDosOpen] = useState(false);
   const toast = useToast();
   const navigate = useNavigate();
   // const { auth } = useAuth(null);
@@ -559,38 +561,37 @@ export default function Navbar() {
           p={4}
           display={{ md: 'none' }}>
           
-          {/* Piso Uno */}
-          <Disclosure>
-            {({ isOpen }) => (
-              <Box>
-                <DisclosureButton
-                  as={Button}
-                  rightIcon={<ChevronDownIcon transform={isOpen ? 'rotate(180deg)' : ''} />}
-                  variant="ghost"
-                  textAlign="left">
-                  Piso Uno
-                </DisclosureButton>
-                <DisclosurePanel pb={4}>
-                  <Stack pl={4} borderLeft={1} borderColor={'gray.200'}>
-                    {pisoUno.map((item) => (
-                      <Button 
-                        key={item.name}
-                        as="a" 
-                        href={item.href}
-                        variant="ghost"
-                        justifyContent="flex-start"
-                        leftIcon={<Icon as={item.icon} />}>
-                        {item.name}
-                      </Button>
-                    ))}
-                  </Stack>
-                </DisclosurePanel>
-              </Box>
-            )}
-          </Disclosure>
+          {/* {/* Piso Uno */}
+          {/* <Box>
+  <Button
+    onClick={onTogglePisoUno} // Necesitarás un estado para esto
+    rightIcon={<ChevronDownIcon transform={isPisoUnoOpen ? 'rotate(180deg)' : ''} />}
+    variant="ghost"
+    textAlign="left"
+    width="full"
+    justifyContent="space-between"
+  >
+    Piso Uno
+  </Button>
+  <Collapse in={isPisoUnoOpen} animateOpacity>
+    <Stack pl={4} borderLeft={1} borderColor={'gray.200'}>
+      {pisoUno.map((item) => (
+        <Button 
+          key={item.name}
+          as="a" 
+          href={item.href}
+          variant="ghost"
+          justifyContent="flex-start"
+          leftIcon={<Icon as={item.icon} />}>
+          {item.name}
+        </Button>
+      ))}
+    </Stack>
+  </Collapse>
+          </Box> */}
           
           {/* Piso Dos */}
-          <Disclosure>
+          {/* <Disclosure>
             {({ isOpen }) => (
               <>
                 <DisclosureButton
@@ -617,7 +618,7 @@ export default function Navbar() {
                 </DisclosurePanel>
               </>
             )}
-          </Disclosure>
+          </Disclosure>  */}
           
           {/* Otros enlaces */}
           <Button as="a" href="#" variant="ghost" justifyContent="flex-start">
