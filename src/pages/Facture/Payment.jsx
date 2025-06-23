@@ -57,7 +57,7 @@ const Payment = () => {
   const toast = useToast();
   const navigate = useNavigate();
   const { auth } = useAuth();
-
+  const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
   useEffect(() => {
     const fetchCartAndRates = async () => {
       try {
@@ -75,7 +75,7 @@ const Payment = () => {
         // console.log('Available Aliquots:', aliquotsResponse.data);
         console.log('Cart Response:', cartResponse.data);
 
-        if (cartResponse.data.items.length === 0) {
+        if (!cartResponse.data?.items || cartResponse.data.items.length === 0) {
           navigate('/cart');
           toast({
             title: 'Carrito vacío',
@@ -110,9 +110,54 @@ const Payment = () => {
 
     fetchCartAndRates();
   }, [auth?.token, navigate, toast]);
+// actualiza el contrador de tiempo cada segundo
+  useEffect(() => {
+  const interval = setInterval(() => {
+    if (exchangeRates.lastUpdated) {
+      const now = new Date();
+      const lastUpdated = new Date(exchangeRates.lastUpdated);
+      const seconds = Math.floor((now - lastUpdated) / 1000);
+      setSecondsSinceUpdate(seconds);
+    }
+  }, 1000);
 
-  
+  return () => clearInterval(interval);
+}, [exchangeRates.lastUpdated]);
+// efecto para verificar periodicamente si el carrito a experado y redirigir al usuario al home
+useEffect(() => {
+  const checkCartExpiration = async () => {
+    try {
+      const response = await axios.get('/api/cart/check-status', {
+        headers: { 'Authorization': `Bearer ${auth?.token || ''}` }
+      });
+      
+      console.log('Cart Status Response:', response.data);
+      if (response.data.isExpired) {
+        toast({
+          title: 'Carrito expirado',
+          description: 'Tu carrito ha sido eliminado por inactividad',
+          status: 'info',
+          duration: 3000,
+          isClosable: true,
+        });
+        navigate('/home');
+      }
+    } catch (error) {
+      console.error('Error al verificar el carrito:', error);
+    }
+  };
 
+  const interval = setInterval(checkCartExpiration, 60 * 1000); // Cada minuto
+  return () => clearInterval(interval);
+},[auth?.token, navigate, toast]);
+
+
+  // funcion para formatear el tiempo de actualización
+  const formatTimeSinceUpdate = (seconds) => {
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
+  };
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -462,7 +507,10 @@ const Payment = () => {
                       
                       <Text fontWeight="medium">Actualizado:</Text>
                       <Text textAlign="right">
-                        {new Date(exchangeRates.lastUpdated).toLocaleString()}
+                        {new Date(exchangeRates.lastUpdated).toLocaleString()} 
+                        <Badge ml={2} colorScheme="orange">
+                          Hace {formatTimeSinceUpdate(secondsSinceUpdate)}
+                        </Badge>
                       </Text>
                     </SimpleGrid>
 
