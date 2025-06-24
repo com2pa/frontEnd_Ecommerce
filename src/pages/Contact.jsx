@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   Box,
   Container,
@@ -17,29 +17,181 @@ import {
   SimpleGrid,
   Link,
   Divider,
-  useToast
+  useToast,
+  FormErrorMessage,
+  FormHelperText
 } from '@chakra-ui/react';
 import { FaPhone, FaEnvelope, FaMapMarkerAlt, FaPaperPlane, FaFacebook, FaInstagram, FaTwitter } from 'react-icons/fa';
 import Menu from '../layout/Menu';
 import PiePagina from '../layout/PiePagina'
+import axios from 'axios';
+const name_regex=/^[A-Z][a-z]*[ ][A-Z][a-z]*$/;
+const  email_regex= /[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\.[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*@(?:[a-z0-9](?:[a-z0-9-]*[a-z0-9])?\.)+[a-z0-9](?:[a-z0-9-]*[a-z0-9])?/
+const phone_regex = /^[0](212|412|414|424|416|426)[0-9]{7}$/;
+const comentario_regex = /^[\s\S]{1,500}$/;
+
 const ContactPage = () => {
   const toast = useToast();
   const bgColor = useColorModeValue('gray.50', 'gray.800');
   const cardBg = useColorModeValue('white', 'gray.700');
   const primaryColor = useColorModeValue('teal.500', 'teal.300');
 
-  const handleSubmit = (e) => {
-    e.preventDefault();
-    toast({
-      title: 'Mensaje enviado',
-      description: 'Gracias por contactarnos. Te responderemos pronto.',
-      status: 'success',
-      duration: 5000,
-      isClosable: true,
+  const [formData, setFormData] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: ''
+  });
+  const [errors, setErrors] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: ''
+  });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleChange = (e) => {
+    const { name, value } = e.target;
+    setFormData({
+      ...formData,
+      [name]: value
     });
-    e.target.reset();
+
+    // Validación en tiempo real
+    validateField(name, value);
   };
 
+  const validateField = (name, value) => {
+    let error = '';
+    
+    switch (name) {
+      case 'nombre':
+        if (!value.trim()) {
+          error = 'El nombre es requerido';
+        } else if (!name_regex.test(value)) {
+          error = 'Debe ingresar nombre y apellido (ej: Juan Pérez)';
+        }
+        break;
+      case 'email':
+        if (!value.trim()) {
+          error = 'El email es requerido';
+        } else if (!email_regex.test(value)) {
+          error = 'Ingrese un email válido';
+        }
+        break;
+      case 'phone':
+        if (value && !phone_regex.test(value)) {
+          error = 'Ingrese un teléfono válido (ej: 04121234567)';
+        }
+        break;
+      case 'message':
+        if (!value.trim()) {
+          error = 'El mensaje es requerido';
+        } else if (!comentario_regex.test(value)) {
+          error = 'El mensaje debe tener entre 1 y 500 caracteres';
+        }
+        break;
+      default:
+        break;
+    }
+
+    setErrors({
+      ...errors,
+      [name]: error
+    });
+  };
+
+  const validateForm = () => {
+    let isValid = true;
+    const newErrors = { ...errors };
+
+    // Validar todos los campos requeridos
+    if (!formData.name.trim()) {
+      newErrors.name = 'El nombre es requerido';
+      isValid = false;
+    } else if (!name_regex.test(formData.name)) {
+      newErrors.name = 'Debe ingresar nombre y apellido (ej: Juan Pérez)';
+      isValid = false;
+    }
+
+    if (!formData.email.trim()) {
+      newErrors.email = 'El email es requerido';
+      isValid = false;
+    } else if (!email_regex.test(formData.email)) {
+      newErrors.email = 'Ingrese un email válido';
+      isValid = false;
+    }
+
+    if (formData.phone && !phone_regex.test(formData.phone)) {
+      newErrors.phone = 'Ingrese un teléfono válido (ej: 04121234567)';
+      isValid = false;
+    }
+
+    if (!formData.message.trim()) {
+      newErrors.message = 'El mensaje es requerido';
+      isValid = false;
+    } else if (!comentario_regex.test(formData.message)) {
+      newErrors.message = 'El mensaje debe tener entre 1 y 500 caracteres';
+      isValid = false;
+    }
+
+    setErrors(newErrors);
+    return isValid;
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    
+    if (!validateForm()) {
+      toast({
+        title: 'Error en el formulario',
+        description: 'Por favor corrige los errores antes de enviar',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await axios.post('/api/contactame', formData);
+      
+      toast({
+        title: 'Mensaje enviado',
+        description: 'Gracias por contactarnos. Te responderemos pronto.',response,
+        status: 'success',
+        duration: 5000,
+        isClosable: true,
+      });
+      
+      // Resetear el formulario
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        message: ''
+      });
+    } catch (error) {
+      toast({
+        title: 'Error al enviar',
+        description: 'Hubo un problema al enviar tu mensaje. Por favor intenta nuevamente.',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      console.error('Error al enviar el formulario:', error);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const getInputBorderColor = (fieldName) => {
+    if (errors[fieldName]) return 'red.500';
+    if (formData[fieldName]) return 'green.500';
+    return 'gray.200';
+  };
   return (
     <>
     
@@ -68,60 +220,102 @@ const ContactPage = () => {
             </Heading>
             
             <form onSubmit={handleSubmit}>
-              <VStack spacing={6}>
-                <FormControl isRequired>
-                  <FormLabel>Nombre completo</FormLabel>
-                  <Input 
-                    type="text" 
-                    placeholder="Tu nombre" 
-                    focusBorderColor={primaryColor}
-                    size="lg"
-                  />
-                </FormControl>
-                
-                <FormControl isRequired>
-                  <FormLabel>Correo electrónico</FormLabel>
-                  <Input 
-                    type="email" 
-                    placeholder="tu@email.com" 
-                    focusBorderColor={primaryColor}
-                    size="lg"
-                  />
-                </FormControl>
-                
-                <FormControl>
-                  <FormLabel>Teléfono (opcional)</FormLabel>
-                  <Input 
-                    type="tel" 
-                    placeholder="+51 123 456 789" 
-                    focusBorderColor={primaryColor}
-                    size="lg"
-                  />
-                </FormControl>
-                
-                <FormControl isRequired>
-                  <FormLabel>Mensaje</FormLabel>
-                  <Textarea 
-                    placeholder="¿En qué podemos ayudarte?" 
-                    rows={6} 
-                    focusBorderColor={primaryColor}
-                    size="lg"
-                  />
-                </FormControl>
-                
-                <Button 
-                  type="submit" 
-                  colorScheme="teal" 
-                  size="lg" 
-                  rightIcon={<FaPaperPlane />}
-                  w="full"
-                  mt={4}
-                >
-                  Enviar mensaje
-                </Button>
-              </VStack>
-            </form>
-          </Box>
+                <VStack spacing={6}>
+                  <FormControl isRequired isInvalid={!!errors.nombre}>
+                    <FormLabel>Nombre completo</FormLabel>
+                    <Input 
+                      name="name"
+                      type="text" 
+                      placeholder="Tu nombre" 
+                      focusBorderColor="teal.500"
+                      size="lg"
+                      value={formData.name}
+                      onChange={handleChange}
+                      borderColor={getInputBorderColor('nombre')}
+                    />
+                    {errors.name && (
+                      <FormErrorMessage>{errors.name}</FormErrorMessage>
+                    )}
+                    {!errors.name && formData.name && (
+                      <FormHelperText color="green.500">Nombre válido</FormHelperText>
+                    )}
+                  </FormControl>
+                  
+                  <FormControl isRequired isInvalid={!!errors.email}>
+                    <FormLabel>Correo electrónico</FormLabel>
+                    <Input 
+                      name="email"
+                      type="email" 
+                      placeholder="tu@email.com" 
+                      focusBorderColor="teal.500"
+                      size="lg"
+                      value={formData.email}
+                      onChange={handleChange}
+                      borderColor={getInputBorderColor('email')}
+                    />
+                    {errors.email && (
+                      <FormErrorMessage>{errors.email}</FormErrorMessage>
+                    )}
+                    {!errors.email && formData.email && (
+                      <FormHelperText color="green.500">Email válido</FormHelperText>
+                    )}
+                  </FormControl>
+                  
+                  <FormControl isInvalid={!!errors.phone}>
+                    <FormLabel>Teléfono (opcional)</FormLabel>
+                    <Input 
+                      name="phone"
+                      type="tel" 
+                      placeholder="04121234567" 
+                      focusBorderColor="teal.500"
+                      size="lg"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      borderColor={getInputBorderColor('telefono')}
+                    />
+                    {errors.phone && (
+                      <FormErrorMessage>{errors.phone}</FormErrorMessage>
+                    )}
+                    {!errors.phone && formData.phone && (
+                      <FormHelperText color="green.500">Teléfono válido</FormHelperText>
+                    )}
+                  </FormControl>
+                  
+                  <FormControl isRequired isInvalid={!!errors.mensaje}>
+                    <FormLabel>Mensaje</FormLabel>
+                    <Textarea 
+                      name="message"
+                      placeholder="¿En qué podemos ayudarte?" 
+                      rows={6} 
+                      focusBorderColor="teal.500"
+                      size="lg"
+                      value={formData.message}
+                      onChange={handleChange}
+                      borderColor={getInputBorderColor('message')}
+                    />
+                    {errors.message && (
+                      <FormErrorMessage>{errors.message}</FormErrorMessage>
+                    )}
+                    {!errors.message && formData.message && (
+                      <FormHelperText color="green.500">Mensaje válido</FormHelperText>
+                    )}
+                  </FormControl>
+                  
+                  <Button 
+                    type="submit" 
+                    colorScheme="teal" 
+                    size="lg" 
+                    rightIcon={<FaPaperPlane />}
+                    w="full"
+                    mt={4}
+                    isLoading={isSubmitting}
+                    loadingText="Enviando..."
+                  >
+                    Enviar mensaje
+                  </Button>
+                </VStack>
+              </form>
+            </Box>
 
           {/* Información de contacto */}
           <Box>
