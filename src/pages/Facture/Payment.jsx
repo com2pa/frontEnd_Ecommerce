@@ -494,7 +494,6 @@ useEffect(() => {
                     aria-label={isInvoiceOpen ? 'Ocultar detalles' : 'Mostrar detalles'}
                   />
                 </Flex>
-
                 {/* Desglose detallado de la factura */}
                 <Collapse in={isInvoiceOpen} animateOpacity>
                   <Stack spacing={3} mb={4} p={3} bg="gray.50" borderRadius="md">
@@ -505,11 +504,11 @@ useEffect(() => {
                       {/* <Text fontWeight="medium">Tasa EUR:</Text>
                       <Text textAlign="right">1 EUR = {exchangeRates.EUR} VES</Text> */}
                       
-                      <Text fontWeight="medium">Actualizado:</Text>
+                      <Text fontWeight="medium">Actualizado:</Text>                      
                       <Text textAlign="right">
-                        {new Date(exchangeRates.lastUpdated).toLocaleString()} 
+                        {new Date(exchangeRates.lastUpdated).toLocaleString()}                        
                         <Badge ml={2} colorScheme="orange">
-                          Hace {formatTimeSinceUpdate(secondsSinceUpdate)}
+                            Hace {formatTimeSinceUpdate(secondsSinceUpdate)}
                         </Badge>
                       </Text>
                     </SimpleGrid>
