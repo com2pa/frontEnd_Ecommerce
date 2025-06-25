@@ -174,6 +174,31 @@ const ContactPage = () => {
         message: ''
       });
     } catch (error) {
+      if (error.response && error.response.status === 400 && 
+        error.response.data.error.includes('Ya has enviado un mensaje')) {
+      // Mostrar mensaje especial para mensajes duplicados
+      toast({
+        title: 'Mensaje ya enviado',
+        description: (
+          <Box>
+            <Text>Ya has enviado un mensaje recientemente con estos datos.</Text>
+            <Text mt={2} fontWeight="bold">Por favor espera antes de enviar otro.</Text>
+            <Text mt={2}>Si necesitas ayuda urgente, llámanos al +51 123 456 789</Text>
+          </Box>
+        ),
+        status: 'warning',
+        duration: 8000,
+        isClosable: true,
+        position: 'top',
+      });
+      setFormData({
+        name: '',
+        email: '',
+        phone: '',
+        message: ''
+      });
+    } else {
+      // Mostrar error genérico para otros casos
       toast({
         title: 'Error al enviar',
         description: 'Hubo un problema al enviar tu mensaje. Por favor intenta nuevamente.',
@@ -181,6 +206,7 @@ const ContactPage = () => {
         duration: 5000,
         isClosable: true,
       });
+    }
       console.error('Error al enviar el formulario:', error);
     } finally {
       setIsSubmitting(false);
