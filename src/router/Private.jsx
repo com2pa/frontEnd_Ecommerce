@@ -16,6 +16,7 @@ import Bcv from '../pagesPrivate/Bcv';
 import RolesUser from '../pagesPrivate/RolesUser';
 import ConectUser from '../pagesPrivate/ConectUser';
 import AuditLog from '../pagesPrivate/AuditLog';
+import Mensage from '../pagesPrivate/Mensage';
 const Private = () => {
   return (
     <>
@@ -36,6 +37,7 @@ const Private = () => {
           <Route path='/role-user' element={<RolesUser/>}/>
           <Route path='/conectados' element={<ConectUser/>}/>
           <Route path='/auditoria' element={<AuditLog />} />
+          <Route path='/mensaje' element={<Mensage/>} />
         </Route>
       </Routes>
     </>
