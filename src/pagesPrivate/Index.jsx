@@ -2,6 +2,7 @@ import React from 'react';
 import { Box, Grid, GridItem, Heading, Text } from '@chakra-ui/react';
 import SidebarHeader from './LayoutPrivate/SidebarHeader';
 import NumberUsers from '../pagesPrivate/HomeDashboard/NumberUsers';
+import NotificationBadge from './NotificationBadge';
 
 const Index = () => {
   return (
@@ -10,6 +11,7 @@ const Index = () => {
         <Heading as="h2" size="lg" mb={5}>
           Panel de Administración
         </Heading>
+         <NotificationBadge />
         
         <Grid templateColumns={{ base: '1fr', md: 'repeat(2, 1fr)', lg: 'repeat(4, 1fr)' }} gap={6}>
           <GridItem>
