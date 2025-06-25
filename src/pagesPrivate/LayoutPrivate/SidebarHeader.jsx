@@ -33,6 +33,7 @@ import { PiStudentFill } from 'react-icons/pi';
 import { TbBasketDiscount } from "react-icons/tb";
 import { FaDollarSign, FaFile } from 'react-icons/fa';
 import { FaUserCheck, FaUsers } from "react-icons/fa6";
+import { MdEmail } from "react-icons/md";
 
 // Menú lateral
 const LinkItems = [
@@ -184,6 +185,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
     { name: 'Productos', icon: IoMdPersonAdd, to: '/product' },
     { name: 'Reportes', icon: GiSpellBook, to: '#' },
     { name: 'Auditoria', icon: FaFile, to: '/auditoria' },
+    { name: 'Mensaje',icon:MdEmail, to:'/mensaje'}
   ];
   return (
     <Flex
