@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Table,
   Thead,
@@ -24,7 +24,8 @@ import {
   ModalFooter,
   useDisclosure,
   Textarea,
-  FormControl
+  FormControl,
+  FormErrorMessage
 } from '@chakra-ui/react';
 import { FiMail, FiCheckCircle } from 'react-icons/fi';
 import { IoMdMailOpen } from 'react-icons/io';
@@ -34,9 +35,9 @@ import axios from 'axios';
 const Mensage = () => {
   const [messages, setMessages] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [selectedMessage, setSelectedMessage] = useState(null);
-  const [responseText, setResponseText] = useState('');
-  const [isUpdating, setIsUpdating] = useState(false);
+  const [responseText, setResponseText] = useState('');  
+  const [isSendingResponse, setIsSendingResponse] = useState(false); // Para enviar respuestas 
+  const currentMessageIdRef = useRef(null);  
   const toast = useToast();
   const { isOpen, onOpen, onClose } = useDisclosure();
 
@@ -48,7 +49,7 @@ const Mensage = () => {
       } catch (error) {
         toast({
           title: 'Error',
-          description: 'Error al cargar los mensajes',
+          description: error.response?.data?.error || 'Error al cargar los mensajes',
           status: 'error',
           duration: 5000,
           isClosable: true,
@@ -61,29 +62,24 @@ const Mensage = () => {
     fetchMessages();
   }, [toast]);
 
-  const updateMessageStatus = async (id, newStatus) => {
-    setIsUpdating(true);
+  const updateMessageStatus = async (id, newStatus) => {    
     try {
-      const response = await axios.patch(`/api/contactame/${id}`, { status: newStatus });
-      
-      // Actualizar el estado local
-      setMessages(messages.map(msg => 
-        msg._id === id ? { ...msg, status: newStatus } : msg
-      ));
-      
-      toast({
-        title: 'Estado actualizado',
-        description: `El mensaje se marcó como ${getStatusText(newStatus)}`,
-        status: 'success',
-        duration: 3000,
-        isClosable: true,
-      });
-
-      // Si es "answered", abrir modal para respuesta
       if (newStatus === 'answered') {
-        const messageToAnswer = messages.find(msg => msg._id === id);
-        setSelectedMessage(messageToAnswer);
+        currentMessageIdRef.current = id;
+        console.log('ID establecido en ref:', id); // Debug
         onOpen();
+      } else {
+             await axios.patch(`/api/contactame/${id}`, { status: newStatus });
+            setMessages(messages.map(msg => 
+            msg._id === id ? { ...msg, status: newStatus } : msg
+            ));    
+        toast({
+          title: 'Estado actualizado',
+          description: `El mensaje se marcó como ${getStatusText(newStatus)}`,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
       }
     } catch (error) {
       toast({
@@ -93,9 +89,7 @@ const Mensage = () => {
         duration: 5000,
         isClosable: true,
       });
-    } finally {
-      setIsUpdating(false);
-    }
+    } 
   };
 
   const getStatusText = (status) => {
@@ -118,30 +112,69 @@ const Mensage = () => {
   };
 
   const handleSendResponse = async () => {
-    try {
-      // Aquí puedes implementar el envío de la respuesta por email
-      // usando el responseText y los datos de selectedMessage
-      
+    // Validación inicial
+    if (!responseText.trim()) {
       toast({
-        title: 'Respuesta enviada',
+        title: 'Error',
+        description: 'La respuesta no puede estar vacía',
+        status: 'error',
+        duration: 5000,
+        isClosable: true,
+      });
+      return;
+    }
+    
+    // Usamos currentMessageIdRef.current en lugar del estado
+    if (!currentMessageIdRef.current) {
+        console.error('Error: ID no definido. Mensajes disponibles:', messages.id);
+        toast({
+            title: 'Error',
+            description: 'No se ha seleccionado ningún mensaje para responder',
+            status: 'error',
+            duration: 5000,
+            isClosable: true,
+        });
+      return;
+    }
+    setIsSendingResponse(true);
+
+    try {
+      console.log('Enviando respuesta para ID:', currentMessageIdRef.current); // Debug 
+       await axios.post(`/api/contactame/${currentMessageIdRef.current}/responder`, {
+        respuesta: responseText
+      });
+       // Actualizar estado local usando el mismo ID que en la petición
+      setMessages(messages.map(msg => 
+        msg.id === currentMessageIdRef.current ? { ...msg, status: 'answered' } : msg
+      ));
+
+      toast({
+        title: 'Éxito',
         description: 'La respuesta ha sido enviada al cliente',
         status: 'success',
         duration: 5000,
         isClosable: true,
       });
       
-      onClose();
+      // Resetear el formulario
       setResponseText('');
+      onClose();      
     } catch (error) {
+      console.error('Error al enviar respuesta:', error);
       toast({
         title: 'Error',
-        description: 'Error al enviar la respuesta',
+        description: error.response?.data?.error || 'Error al enviar la respuesta',
         status: 'error',
-        duration: 5000,
+        duration: 7000,
         isClosable: true,
       });
+    } finally {
+      setIsSendingResponse(false);
     }
   };
+
+  // Obtener mensaje actual
+  const currentMessage = messages.find(msg => msg.id === currentMessageIdRef.current) || null;
 
   return (
     <SidebarHeader>
@@ -169,7 +202,7 @@ const Mensage = () => {
               </Thead>
               <Tbody>
                 {messages.map((message) => (
-                  <Tr key={message._id}>
+                  <Tr key={message.id}>
                     <Td>{message.name}</Td>
                     <Td>{message.email}</Td>
                     <Td maxWidth="300px" isTruncated>{message.message}</Td>
@@ -181,7 +214,7 @@ const Mensage = () => {
                           leftIcon={<Icon as={FiMail} />}
                           onClick={() => updateMessageStatus(message.id, 'unread')}
                           colorScheme={message.status === 'unread' ? 'orange' : 'gray'}
-                          isLoading={isUpdating}
+                        //   isLoading={isUpdatingStatus}
                         >
                           No leído
                         </Button>
@@ -189,7 +222,7 @@ const Mensage = () => {
                           leftIcon={<Icon as={IoMdMailOpen} />}
                           onClick={() => updateMessageStatus(message.id, 'read')}
                           colorScheme={message.status === 'read' ? 'blue' : 'gray'}
-                          isLoading={isUpdating}
+                        //   isLoading={isUpdatingStatus}
                         >
                           Leído
                         </Button>
@@ -197,9 +230,9 @@ const Mensage = () => {
                           leftIcon={<Icon as={FiCheckCircle} />}
                           onClick={() => updateMessageStatus(message.id, 'answered')}
                           colorScheme={message.status === 'answered' ? 'green' : 'gray'}
-                          isLoading={isUpdating}
+                        //   isLoading={isUpdatingStatus}
                         >
-                          Respondido
+                          Responder
                         </Button>
                       </ButtonGroup>
                     </Td>
@@ -211,29 +244,53 @@ const Mensage = () => {
         )}
 
         {/* Modal para enviar respuesta */}
-        <Modal isOpen={isOpen} onClose={onClose} size="xl">
+        <Modal isOpen={isOpen} onClose={()=>{
+            console.log('Cerrando modal, ID actual:', currentMessageIdRef.current); // Debug
+            currentMessageIdRef.current = null; 
+            onClose()}
+            } size="xl">
           <ModalOverlay />
           <ModalContent>
-            <ModalHeader>Responder a {selectedMessage?.name}</ModalHeader>
+            <ModalHeader>Responder a {currentMessage?.name}(ID: {currentMessageIdRef.current})</ModalHeader>
             <ModalCloseButton />
             <ModalBody>
-              <Text mb={2}><strong>Mensaje original:</strong></Text>
-              <Text mb={4} p={3} bg="gray.100" borderRadius="md">{selectedMessage?.message}</Text>
+              <Text mb={2}><strong>id cliente:</strong> {currentMessage?.id}</Text>
+              <Text mb={2}><strong>Email del cliente:</strong> {currentMessage?.email}</Text>
+              <Text mb={2}><strong>Teléfono:</strong> {currentMessage?.phone || 'No proporcionado'}</Text>
+              {/* {console.log(currentMessage)} */}
+              <Text mb={2} mt={4}><strong>Mensaje original:</strong></Text>
+              <Text mb={4} p={3} bg="gray.100" borderRadius="md">{currentMessage?.message}</Text>
               
-              <FormControl>
+              <FormControl isInvalid={!responseText.trim() && isSendingResponse}>
                 <Textarea
                   placeholder="Escribe tu respuesta aquí..."
                   value={responseText}
                   onChange={(e) => setResponseText(e.target.value)}
                   rows={8}
+                  isRequired
+                  isDisabled={isSendingResponse}
                 />
+                {!responseText.trim() && (
+                  <FormErrorMessage>La respuesta no puede estar vacía</FormErrorMessage>
+                )}
               </FormControl>
             </ModalBody>
             <ModalFooter>
-              <Button variant="ghost" mr={3} onClick={onClose}>
+              <Button 
+                variant="ghost" 
+                mr={3} 
+                onClick={onClose}
+                isDisabled={isSendingResponse}
+              >
                 Cancelar
               </Button>
-              <Button colorScheme="teal" onClick={handleSendResponse}>
+              <Button 
+                colorScheme="teal" 
+                onClick={handleSendResponse}
+                isDisabled={!responseText.trim()}
+                isLoading={isSendingResponse}
+                loadingText="Enviando..."
+              >
                 Enviar respuesta
               </Button>
             </ModalFooter>
