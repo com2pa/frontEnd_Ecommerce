@@ -32,7 +32,8 @@ export const Public = () => {
         <Route path='/subcategorias/:id/productos' element={<Productos />} />
         <Route path='/productos/:id' element={<DetalleProducto />} />
         <Route path='/descuento' element={<Ofertas/>}/>
-        <Route path='/contactame' element={<ContactPage/>}/>         
+        <Route path='/contactame' element={<ContactPage/>}/> 
+               
       </Routes>
     </>
   );
