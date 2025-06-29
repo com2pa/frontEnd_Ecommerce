@@ -77,7 +77,7 @@ export const SplitScreen = () => {
         password,
       };
       const response = await axios.post('/api/login', user);
-      
+      console.log(response)
       setAuth(response.data);
       setIsLoading(false);
 
@@ -101,9 +101,12 @@ export const SplitScreen = () => {
         });
       }
 
-      navegate('/dashboard');
-      // navegate('/home');
-      //window.location.pathname =`/Servicio/`
+      if (response.data.userType === 'admin') {
+        navegate('/dashboard');
+      } else {
+        navegate('/client');
+      }
+      
     } catch (error) {
       setIsLoading(false);
       console.log(error);
