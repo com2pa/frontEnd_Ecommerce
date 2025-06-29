@@ -17,6 +17,8 @@ import RolesUser from '../pagesPrivate/RolesUser';
 import ConectUser from '../pagesPrivate/ConectUser';
 import AuditLog from '../pagesPrivate/AuditLog';
 import Mensage from '../pagesPrivate/Mensage';
+import IndexCliente from '../pagesPrivate/Cliente/IndexCliente';
+
 const Private = () => {
   return (
     <>
@@ -38,6 +40,8 @@ const Private = () => {
           <Route path='/conectados' element={<ConectUser/>}/>
           <Route path='/auditoria' element={<AuditLog />} />
           <Route path='/mensaje' element={<Mensage/>} />
+          {/* dasboard para cliente */}
+          <Route path='/client' element={<IndexCliente/>}/>
         </Route>
       </Routes>
     </>
