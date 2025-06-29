@@ -1,226 +1,410 @@
+import React, { useState } from 'react';
 import {
-  Disclosure,
-  DisclosureButton,
-  DisclosurePanel,
+  Box,
+  Button,
+  Flex,
+  Heading,
+  Text,
+  SimpleGrid,
+  Card,
+  CardHeader,
+  CardBody,
+  Stack,
+  Badge,
+  Image,
+  Divider,
+  useDisclosure,
+  Drawer,
+  DrawerBody,
+  DrawerHeader,
+  DrawerOverlay,
+  DrawerContent,
+  DrawerCloseButton,
+  IconButton,
+  VStack,
+  HStack,
+  Avatar,
   Menu,
   MenuButton,
+  MenuList,
   MenuItem,
-  MenuItems,
-} from '@headlessui/react';
-import { Bars3Icon, BellIcon, XMarkIcon } from '@heroicons/react/24/outline';
+  MenuDivider
+} from '@chakra-ui/react';
+import {
+  FiHome,
+  FiHeart,
+  FiBell,
+  FiShoppingBag,
+  FiMenu,
+  FiUser,
+  FiSettings,
+  FiLogOut
+} from 'react-icons/fi';
+import { useNavigate } from 'react-router-dom';
+const SidebarWithHeader = () => {
+  const [activeTab, setActiveTab] = useState('home');
+  const { isOpen, onOpen, onClose } = useDisclosure();
+  const accentColor = 'teal';
+  const navigate = useNavigate();
+  // Datos de ejemplo
+  const orders = [
+    {
+      id: '#ORD-78945',
+      date: '15 Jun 2023',
+      status: 'En camino',
+      items: 3,
+      total: '$145.99'
+    },
+    {
+      id: '#ORD-78944',
+      date: '10 Jun 2023',
+      status: 'Entregado',
+      items: 5,
+      total: '$89.50'
+    }
+  ];
 
-const user = {
-  name: 'Tom Cook',
-  email: 'tom@example.com',
-  imageUrl:
-    'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=facearea&facepad=2&w=256&h=256&q=80',
-};
-const navigation = [
-  { name: 'Dashboard', href: '#', current: true },
-  { name: 'Team', href: '#', current: false },
-  { name: 'Projects', href: '#', current: false },
-  { name: 'Calendar', href: '#', current: false },
-  { name: 'Reports', href: '#', current: false },
-];
-const userNavigation = [
-  { name: 'Your Profile', href: '#' },
-  { name: 'Settings', href: '#' },
-  { name: 'Sign out', href: '#' },
-];
+  const wishlist = [
+    {
+      id: 'PROD-001',
+      name: 'Zapatos deportivos',
+      price: '$59.99',
+      image: 'https://via.placeholder.com/80'
+    },
+    {
+      id: 'PROD-002',
+      name: 'Camisa casual',
+      price: '$29.99',
+      image: 'https://via.placeholder.com/80'
+    }
+  ];
 
-function classNames(...classes) {
-  return classes.filter(Boolean).join(' ');
-}
+  const notifications = [
+    {
+      id: 1,
+      title: 'Tu pedido ha sido enviado',
+      time: 'Hace 2 horas',
+      read: false
+    },
+    {
+      id: 2,
+      title: 'Oferta especial en productos seleccionados',
+      time: 'Ayer',
+      read: true
+    }
+  ];
 
-export default function SidebarWitchHeade() {
   return (
-    <>
-      {/*
-        This example requires updating your template:
+    <Box minH="100vh" bg="gray.50">
+      {/* Header */}
+      <Box bg="white" boxShadow="sm" position="sticky" top="0" zIndex="sticky">
+        <Flex h="16" alignItems="center" justifyContent="space-between" px={4}>
+          <HStack spacing={4}>
+            <IconButton
+              icon={<FiMenu />}
+              variant="ghost"
+              aria-label="Abrir menú"
+              onClick={onOpen}
+              display={{ base: 'flex', md: 'none' }}
+            />
+            <Heading size="md" color={accentColor + '.600'}>Mi Tienda</Heading>
+            {/* <Button 
+              variant="ghost" 
+              onClick={() => navigate('/home')}
+              display={{ base: 'none', md: 'flex' }}
+            >
+              Ir a la Tienda
+            </Button> */}
+          </HStack>
 
-        ```
-        <html class="h-full bg-gray-100">
-        <body class="h-full">
-        ```
-      */}
-      <div className='min-h-full'>
-        <Disclosure
-          as='nav'
-          className='bg-gray-800'
+          <HStack spacing={4}>
+            <IconButton
+              icon={<FiBell />}
+              variant="ghost"
+              aria-label="Notificaciones"
+            />
+            
+            <Menu>
+              <MenuButton
+                as={Button}
+                rounded="full"
+                variant="ghost"
+                leftIcon={<Avatar size="sm" name="Usuario" src="" />}
+              >
+                Mi cuenta
+              </MenuButton>
+              <MenuList>
+                <MenuItem icon={<FiUser />}>Perfil</MenuItem>
+                {/* <MenuItem icon={<FiSettings />}>Configuración</MenuItem> */}
+                <MenuDivider />
+                <MenuItem icon={<FiLogOut />}>Cerrar sesión</MenuItem>
+              </MenuList>
+            </Menu>
+          </HStack>
+        </Flex>
+      </Box>
+
+      {/* Menú lateral para móviles */}
+      <Drawer isOpen={isOpen} placement="left" onClose={onClose}>
+        <DrawerOverlay />
+        <DrawerContent>
+          <DrawerCloseButton />
+          <DrawerHeader borderBottomWidth="1px">Menú</DrawerHeader>
+          <DrawerBody p={0}>
+            <VStack spacing={1} align="stretch">
+              <Button 
+                leftIcon={<FiHome />}
+                variant="ghost"
+                colorScheme="gray"
+                justifyContent="flex-start"
+                onClick={() => {
+                  navigate('/home');
+                  onClose();
+                }}
+              >
+                Ir a la Tienda Principal
+              </Button>
+              <Button 
+                leftIcon={<FiHome />}
+                variant={activeTab === 'home' ? 'solid' : 'ghost'}
+                colorScheme={activeTab === 'home' ? accentColor : 'gray'}
+                justifyContent="flex-start"
+                onClick={() => {
+                  setActiveTab('home');
+                  onClose();
+                }}
+              >
+                Inicio
+              </Button>
+              <Button 
+                leftIcon={<FiHeart />}
+                variant={activeTab === 'wishlist' ? 'solid' : 'ghost'}
+                colorScheme={activeTab === 'wishlist' ? accentColor : 'gray'}
+                justifyContent="flex-start"
+                onClick={() => {
+                  setActiveTab('wishlist');
+                  onClose();
+                }}
+              >
+                Favoritos
+              </Button>
+              <Button 
+                leftIcon={<FiShoppingBag />}
+                variant={activeTab === 'orders' ? 'solid' : 'ghost'}
+                colorScheme={activeTab === 'orders' ? accentColor : 'gray'}
+                justifyContent="flex-start"
+                onClick={() => {
+                  setActiveTab('orders');
+                  onClose();
+                }}
+              >
+                Mis Compras
+              </Button>
+            </VStack>
+          </DrawerBody>
+        </DrawerContent>
+      </Drawer>
+
+      {/* Contenido principal */}
+      <Flex>
+        {/* Sidebar para desktop */}
+        <Box
+          w="64"
+          bg="white"
+          boxShadow="md"
+          display={{ base: 'none', md: 'block' }}
+          position="fixed"
+          h="calc(100vh - 64px)"
         >
-          <div className='mx-auto max-w-7xl px-4 sm:px-6 lg:px-8'>
-            <div className='flex h-16 items-center justify-between'>
-              <div className='flex items-center'>
-                <div className='shrink-0'>
-                  <img
-                    alt='Your Company'
-                    src='https://tailwindcss.com/plus-assets/img/logos/mark.svg?color=indigo&shade=500'
-                    className='size-8'
-                  />
-                </div>
-                <div className='hidden md:block'>
-                  <div className='ml-10 flex items-baseline space-x-4'>
-                    {navigation.map((item) => (
-                      <a
-                        key={item.name}
-                        href={item.href}
-                        aria-current={item.current ? 'page' : undefined}
-                        className={classNames(
-                          item.current
-                            ? 'bg-gray-900 text-white'
-                            : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                          'rounded-md px-3 py-2 text-sm font-medium'
-                        )}
-                      >
-                        {item.name}
-                      </a>
-                    ))}
-                  </div>
-                </div>
-              </div>
-              <div className='hidden md:block'>
-                <div className='ml-4 flex items-center md:ml-6'>
-                  <button
-                    type='button'
-                    className='relative rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden'
-                  >
-                    <span className='absolute -inset-1.5' />
-                    <span className='sr-only'>View notifications</span>
-                    <BellIcon
-                      aria-hidden='true'
-                      className='size-6'
-                    />
-                  </button>
+          <VStack spacing={1} p={4} align="stretch">
+          <Button 
+            leftIcon={<FiHome />}
+            variant="ghost"
+            colorScheme="gray"
+            justifyContent="flex-start"
+            onClick={() => navigate('/home')}
+          >
+            Ir a la Tienda Principal
+          </Button>
+            <Button 
+              leftIcon={<FiHome />}
+              variant={activeTab === 'home' ? 'solid' : 'ghost'}
+              colorScheme={activeTab === 'home' ? accentColor : 'gray'}
+              justifyContent="flex-start"
+              onClick={() => setActiveTab('home')}
+            >
+              Inicio
+            </Button>
+            <Button 
+              leftIcon={<FiHeart />}
+              variant={activeTab === 'wishlist' ? 'solid' : 'ghost'}
+              colorScheme={activeTab === 'wishlist' ? accentColor : 'gray'}
+              justifyContent="flex-start"
+              onClick={() => setActiveTab('wishlist')}
+            >
+              Favoritos
+            </Button>
+            <Button 
+              leftIcon={<FiShoppingBag />}
+              variant={activeTab === 'orders' ? 'solid' : 'ghost'}
+              colorScheme={activeTab === 'orders' ? accentColor : 'gray'}
+              justifyContent="flex-start"
+              onClick={() => setActiveTab('orders')}
+            >
+              Mis Compras
+            </Button>
+          </VStack>
+        </Box>
 
-                  {/* Profile dropdown */}
-                  <Menu
-                    as='div'
-                    className='relative ml-3'
-                  >
-                    <div>
-                      <MenuButton className='relative flex max-w-xs items-center rounded-full bg-gray-800 text-sm focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden'>
-                        <span className='absolute -inset-1.5' />
-                        <span className='sr-only'>Open user menu</span>
-                        <img
-                          alt=''
-                          src={user.imageUrl}
-                          className='size-8 rounded-full'
-                        />
-                      </MenuButton>
-                    </div>
-                    <MenuItems
-                      transition
-                      className='absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black/5 transition focus:outline-hidden data-closed:scale-95 data-closed:transform data-closed:opacity-0 data-enter:duration-100 data-enter:ease-out data-leave:duration-75 data-leave:ease-in'
-                    >
-                      {userNavigation.map((item) => (
-                        <MenuItem key={item.name}>
-                          <a
-                            href={item.href}
-                            className='block px-4 py-2 text-sm text-gray-700 data-focus:bg-gray-100 data-focus:outline-hidden'
-                          >
-                            {item.name}
-                          </a>
-                        </MenuItem>
-                      ))}
-                    </MenuItems>
-                  </Menu>
-                </div>
-              </div>
-              <div className='-mr-2 flex md:hidden'>
-                {/* Mobile menu button */}
-                <DisclosureButton className='group relative inline-flex items-center justify-center rounded-md bg-gray-800 p-2 text-gray-400 hover:bg-gray-700 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden'>
-                  <span className='absolute -inset-0.5' />
-                  <span className='sr-only'>Open main menu</span>
-                  <Bars3Icon
-                    aria-hidden='true'
-                    className='block size-6 group-data-open:hidden'
-                  />
-                  <XMarkIcon
-                    aria-hidden='true'
-                    className='hidden size-6 group-data-open:block'
-                  />
-                </DisclosureButton>
-              </div>
-            </div>
-          </div>
+        {/* Contenido del dashboard */}
+        <Box 
+          flex="1" 
+          ml={{ base: 0, md: '64' }} 
+          mt="16"
+          p={4}
+        >
+          {/* Barra de navegación secundaria */}
+          <Flex mb={6} bg="white" p={2} borderRadius="md" shadow="sm" display={{ md: 'none' }}>
+            <Button
+              flex={1}
+              variant={activeTab === 'home' ? 'solid' : 'ghost'}
+              colorScheme={activeTab === 'home' ? accentColor : 'gray'}
+              leftIcon={<FiHome />}
+              onClick={() => setActiveTab('home')}
+              size="sm"
+            >
+              Inicio
+            </Button>
+            <Button
+              flex={1}
+              variant={activeTab === 'wishlist' ? 'solid' : 'ghost'}
+              colorScheme={activeTab === 'wishlist' ? accentColor : 'gray'}
+              leftIcon={<FiHeart />}
+              onClick={() => setActiveTab('wishlist')}
+              size="sm"
+            >
+              Favoritos
+            </Button>
+            <Button
+              flex={1}
+              variant={activeTab === 'orders' ? 'solid' : 'ghost'}
+              colorScheme={activeTab === 'orders' ? accentColor : 'gray'}
+              leftIcon={<FiShoppingBag />}
+              onClick={() => setActiveTab('orders')}
+              size="sm"
+            >
+              Compras
+            </Button>
+          </Flex>
 
-          <DisclosurePanel className='md:hidden'>
-            <div className='space-y-1 px-2 pt-2 pb-3 sm:px-3'>
-              {navigation.map((item) => (
-                <DisclosureButton
-                  key={item.name}
-                  as='a'
-                  href={item.href}
-                  aria-current={item.current ? 'page' : undefined}
-                  className={classNames(
-                    item.current
-                      ? 'bg-gray-900 text-white'
-                      : 'text-gray-300 hover:bg-gray-700 hover:text-white',
-                    'block rounded-md px-3 py-2 text-base font-medium'
-                  )}
-                >
-                  {item.name}
-                </DisclosureButton>
-              ))}
-            </div>
-            <div className='border-t border-gray-700 pt-4 pb-3'>
-              <div className='flex items-center px-5'>
-                <div className='shrink-0'>
-                  <img
-                    alt=''
-                    src={user.imageUrl}
-                    className='size-10 rounded-full'
-                  />
-                </div>
-                <div className='ml-3'>
-                  <div className='text-base/5 font-medium text-white'>
-                    {user.name}
-                  </div>
-                  <div className='text-sm font-medium text-gray-400'>
-                    {user.email}
-                  </div>
-                </div>
-                <button
-                  type='button'
-                  className='relative ml-auto shrink-0 rounded-full bg-gray-800 p-1 text-gray-400 hover:text-white focus:ring-2 focus:ring-white focus:ring-offset-2 focus:ring-offset-gray-800 focus:outline-hidden'
-                >
-                  <span className='absolute -inset-1.5' />
-                  <span className='sr-only'>View notifications</span>
-                  <BellIcon
-                    aria-hidden='true'
-                    className='size-6'
-                  />
-                </button>
-              </div>
-              <div className='mt-3 space-y-1 px-2'>
-                {userNavigation.map((item) => (
-                  <DisclosureButton
-                    key={item.name}
-                    as='a'
-                    href={item.href}
-                    className='block rounded-md px-3 py-2 text-base font-medium text-gray-400 hover:bg-gray-700 hover:text-white'
-                  >
-                    {item.name}
-                  </DisclosureButton>
-                ))}
-              </div>
-            </div>
-          </DisclosurePanel>
-        </Disclosure>
+          {/* Contenido según pestaña seleccionada */}
+          {activeTab === 'home' && (
+            <Box>
+              <Heading size="lg" mb={4}>Bienvenido a tu cuenta</Heading>
+              <Text mb={6}>Aquí puedes gestionar tus favoritos, ver tus compras y recibir notificaciones.</Text>
+              
+              <SimpleGrid columns={{ base: 1, md: 2 }} spacing={4}>
+                <Card>
+                  <CardHeader>
+                    <Heading size="md">Resumen rápido</Heading>
+                  </CardHeader>
+                  <CardBody>
+                    <Stack spacing={4}>
+                      <Flex justify="space-between">
+                        <Text>Productos favoritos:</Text>
+                        <Text fontWeight="bold">{wishlist.length}</Text>
+                      </Flex>
+                      <Flex justify="space-between">
+                        <Text>Pedidos activos:</Text>
+                        <Text fontWeight="bold">{orders.filter(o => o.status !== 'Entregado').length}</Text>
+                      </Flex>
+                      <Flex justify="space-between">
+                        <Text>Notificaciones:</Text>
+                        <Text fontWeight="bold">
+                          {notifications.filter(n => !n.read).length} nueva(s)
+                        </Text>
+                      </Flex>
+                    </Stack>
+                  </CardBody>
+                </Card>
+                <Card>
+                  <CardHeader>
+                    <Heading size="md">Último pedido</Heading>
+                  </CardHeader>
+                  <CardBody>
+                    {orders.length > 0 ? (
+                      <>
+                        <Text fontWeight="bold">{orders[0].id}</Text>
+                        <Text>Estado: <Badge colorScheme="blue">{orders[0].status}</Badge></Text>
+                        <Text>Total: {orders[0].total}</Text>
+                      </>
+                    ) : (
+                      <Text>Aún no has realizado pedidos</Text>
+                    )}
+                  </CardBody>
+                </Card>
+              </SimpleGrid>
+            </Box>
+          )}
 
-        <header className='bg-white shadow-sm'>
-          <div className='mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8'>
-            <h1 className='text-3xl font-bold tracking-tight text-gray-900'>
-              Dashboard
-            </h1>
-          </div>
-        </header>
-        <main>
-          <div className='mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8'>
-            {/* Your content */}
-          </div>
-        </main>
-      </div>
-    </>
+          {activeTab === 'wishlist' && (
+            <Box>
+              <Heading size="lg" mb={4}>Tu lista de favoritos</Heading>
+              {wishlist.length > 0 ? (
+                <Stack spacing={4}>
+                  {wishlist.map((item) => (
+                    <Flex key={item.id} align="center" p={3} borderWidth="1px" borderRadius="md" bg="white">
+                      <Image src={item.image} boxSize="60px" objectFit="cover" mr={4} />
+                      <Box flex={1}>
+                        <Text fontWeight="medium">{item.name}</Text>
+                        <Text color="gray.600">{item.price}</Text>
+                      </Box>
+                      <Button colorScheme={accentColor} size="sm">
+                        Comprar
+                      </Button>
+                    </Flex>
+                  ))}
+                </Stack>
+              ) : (
+                <Text>Aún no tienes productos en tu lista de favoritos</Text>
+              )}
+            </Box>
+          )}
+
+          {activeTab === 'orders' && (
+            <Box>
+              <Heading size="lg" mb={4}>Tus compras</Heading>
+              {orders.length > 0 ? (
+                <Stack spacing={4}>
+                  {orders.map((order) => (
+                    <Box key={order.id} p={4} borderWidth="1px" borderRadius="md" bg="white">
+                      <Flex justify="space-between" mb={2}>
+                        <Text fontWeight="bold">{order.id}</Text>
+                        <Text color="gray.500">{order.date}</Text>
+                      </Flex>
+                      <Flex justify="space-between" mb={2}>
+                        <Text>Estado: <Badge colorScheme={order.status === 'Entregado' ? 'green' : 'blue'}>{order.status}</Badge></Text>
+                        <Text>{order.items} {order.items > 1 ? 'artículos' : 'artículo'}</Text>
+                      </Flex>
+                      <Divider my={2} />
+                      <Flex justify="space-between">
+                        <Text fontWeight="bold">Total: {order.total}</Text>
+                        <Button size="sm" variant="outline">
+                          Ver detalles
+                        </Button>
+                      </Flex>
+                    </Box>
+                  ))}
+                </Stack>
+              ) : (
+                <Text>Aún no has realizado compras</Text>
+              )}
+            </Box>
+          )}
+        </Box>
+      </Flex>
+    </Box>
   );
-}
+};
+
+export default SidebarWithHeader;
