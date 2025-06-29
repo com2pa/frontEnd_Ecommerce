@@ -4,6 +4,7 @@ import { useAuth } from '../hooks/useAuth';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
 import { HashLoader } from 'react-spinners';
+import { Box, } from '@chakra-ui/react';
 // import  '../App.css'
 // import { Card, Center, Flex, Heading, Spinner, Text } from '@chakra-ui/react';
 // import { BookLoader } from 'react-awesome-loaders-py3';
@@ -47,14 +48,19 @@ const PersistAuth = () => {
   //CUANDO CARGARDO EL USUARIO
   if (isLoading) {
     return (
-      <div>
-        <HashLoader
-          color='red'
-          loading
-          size={90}
-          speedMultiplier={2}
-        />
-      </div>
+      <Box 
+      display="flex" 
+      justifyContent="center" 
+      alignItems="center" 
+      minHeight="100vh" // Esto asegura que ocupe toda la altura de la ventana
+    >
+      <HashLoader
+        color='red'
+        loading
+        size={90}
+        speedMultiplier={2}
+      />
+    </Box>
     );
   }
   
