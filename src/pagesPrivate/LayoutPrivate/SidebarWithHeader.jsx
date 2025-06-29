@@ -28,7 +28,8 @@ import {
   MenuButton,
   MenuList,
   MenuItem,
-  MenuDivider
+  MenuDivider,
+  useToast
 } from '@chakra-ui/react';
 import {
   FiHome,
@@ -41,11 +42,44 @@ import {
   FiLogOut
 } from 'react-icons/fi';
 import { useNavigate } from 'react-router-dom';
+import axios from 'axios';
+import { useAuth } from '../../hooks/useAuth';
 const SidebarWithHeader = () => {
   const [activeTab, setActiveTab] = useState('home');
   const { isOpen, onOpen, onClose } = useDisclosure();
   const accentColor = 'teal';
   const navigate = useNavigate();
+  const { auth, clearAuth } = useAuth();
+  const toast = useToast();
+  const handleLogout = async () => {
+     
+      try {
+        const response = await axios.get('/api/logout');
+        // Limpiar el estado de autenticación
+        // if (auth?.clearAuth) {
+          // auth.clearAuth(); 
+        // }
+        clearAuth()
+        navigate('/home');
+  
+        toast({
+          title: 'Sesión cerrada',
+          description: response.data.message,
+          status: 'success',
+          duration: 3000,
+          isClosable: true,
+        });
+      } catch (error) {
+        toast({
+          title: 'Error',
+          description: error.response?.data?.message || 'Error al cerrar sesión',
+          status: 'error',
+          duration: 3000,
+          isClosable: true,
+        });
+      }
+    };
+
   // Datos de ejemplo
   const orders = [
     {
@@ -131,13 +165,13 @@ const SidebarWithHeader = () => {
                 variant="ghost"
                 leftIcon={<Avatar size="sm" name="Usuario" src="" />}
               >
-                Mi cuenta
+                {auth?.name}
               </MenuButton>
               <MenuList>
                 <MenuItem icon={<FiUser />}>Perfil</MenuItem>
                 {/* <MenuItem icon={<FiSettings />}>Configuración</MenuItem> */}
                 <MenuDivider />
-                <MenuItem icon={<FiLogOut />}>Cerrar sesión</MenuItem>
+                <MenuItem icon={<FiLogOut />}  onClick={handleLogout}>Cerrar sesión</MenuItem>
               </MenuList>
             </Menu>
           </HStack>
