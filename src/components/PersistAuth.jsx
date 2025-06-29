@@ -70,7 +70,8 @@ const PersistAuth = () => {
     if (auth?.name) {
       return (
         <Navigate
-          to='/dashboard'
+          // to='/dashboard'
+          to={auth.role === 'admin' ? '/dashboard' : '/client'}
           state={{ from: location }}
           replace
         />
@@ -81,7 +82,26 @@ const PersistAuth = () => {
   }
 
   //cuando estoy en cualquier ruta privada
+  // if (auth?.name && location.pathname !== '/') {
+  //   return <Outlet />;
+  // } else {
+  //   return (
+  //     <Navigate
+  //       to='/home'
+  //       state={{ from: location }}
+  //       replace
+  //     />
+  //   );
+  // }
   if (auth?.name && location.pathname !== '/') {
+    // Si es admin y está intentando acceder a ruta de cliente, redirigir a dashboard
+    if (auth.role === 'admin' && location.pathname.startsWith('/client')) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    // Si es user normal y está intentando acceder a dashboard, redirigir a client
+    if (auth.role === 'user' && location.pathname.startsWith('/dashboard')) {
+      return <Navigate to="/client" replace />;
+    }
     return <Outlet />;
   } else {
     return (
