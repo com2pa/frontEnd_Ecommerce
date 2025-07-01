@@ -80,7 +80,6 @@ const PersistAuth = () => {
       return <Outlet />;
     }
   }
-
   //cuando estoy en cualquier ruta privada
   // if (auth?.name && location.pathname !== '/') {
   //   return <Outlet />;
