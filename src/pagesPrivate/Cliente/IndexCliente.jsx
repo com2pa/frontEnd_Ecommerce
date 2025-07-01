@@ -1,13 +1,12 @@
-
-
-import { Box } from '@chakra-ui/react'
-import SidebarWithHeader from '../LayoutPrivate/SidebarWithHeader'
-
+import {Box} from '@chakra-ui/react'
+import ClientDashboard from '../LayoutPrivate/DashboardCliente'
 const IndexCliente = () => {
   return (
-    <SidebarWithHeader>
-    
-    </SidebarWithHeader>
+        <ClientDashboard>
+            <Box>
+                 prueba
+            </Box>
+        </ClientDashboard>
   )
 }
 
