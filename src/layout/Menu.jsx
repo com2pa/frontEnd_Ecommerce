@@ -317,8 +317,7 @@ export default function Navbar() {
   const handleLogout = async () => {
   try {
     await axios.get('/api/logout');
-    clearAuth(); // Limpiar el estado de autenticación
-    navigate('/home');
+    clearAuth(); // Limpiar el estado de autenticación  
     
     toast({
       title: 'Sesión cerrada',
@@ -326,6 +325,10 @@ export default function Navbar() {
       duration: 3000,
       isClosable: true,
     });
+    // Luego redirigimos después de un pequeño delay para asegurar que el toast se muestre
+    setTimeout(() => {
+      navigate('/home');
+    }, 100);
   } catch (error) {
     toast({
       title: 'Error',
@@ -499,7 +502,7 @@ export default function Navbar() {
                 href={'#'}
                 display={{ base: 'none', md: 'inline-flex' }}>
                 <Icon as={FiUser} mr={1} />
-                Hola, {auth.name}
+                Hola, {auth.name} {auth.role === 'admin' && <Badge ml={2} colorScheme="purple">Admin</Badge>}
               </Button>
               
               <Menu>
@@ -510,18 +513,25 @@ export default function Navbar() {
                   cursor={'pointer'}
                   minW={0}>
                   <Avatar
-                    size={'sm'}
-                    src={'https://avatars.dicebear.com/api/male/username.svg'}
+                    size={'md'}
+                    name={auth.name}
+                    
+                    // src={'https://avatars.dicebear.com/api/male/username.svg'}
                   />
                 </MenuButton>
                 <MenuList>
-                  <MenuItem>Mis pedidos</MenuItem>
-                  <MenuItem>Lista de deseos</MenuItem>
-                  {/* {auth.role === 'admin' && ( */}
-                    <MenuItem as="a" href="/dashboard">Dashboard</MenuItem>
-                  {/* // )} */}
+                    {auth.role === 'user' && (
+                        <>
+                          {/* <MenuItem as="a" href="/client">Mis pedidos</MenuItem>
+                          <MenuItem as="a" href="/client/wishlist">Lista de deseos</MenuItem> */}
+                          <MenuItem as="a" href="/client">Mi Dashboard </MenuItem>
+                        </>
+                    )}
+                    {auth.role === 'admin' && (
+                        <MenuItem as="a" href="/dashboard">Dashboard Admin</MenuItem>
+                    )}
                   <MenuDivider />
-                  <MenuItem onClick={handleLogout} >Cerrar sesión</MenuItem>
+                  {/* <MenuItem onClick={handleLogout} >Cerrar sesión</MenuItem> */}
                 </MenuList>
               </Menu>
 
@@ -658,7 +668,7 @@ export default function Navbar() {
                 variant="ghost"
                 justifyContent="flex-start"
                 leftIcon={<Icon as={FiUser} />}>
-                Hola, {auth.name}
+                Hola,  {auth.name} {auth.role === 'admin' && <Badge ml={2} colorScheme="purple">Admin</Badge>}
               </Button>
               <Button 
                 as="a" 
@@ -668,7 +678,7 @@ export default function Navbar() {
                 leftIcon={<Icon as={FiArchive} />}>
                 Mis pedidos
               </Button>
-              {/* {auth.role === 'admin' && ( */}
+              {/* {auth.role === 'admin' && (
                 <Button 
                   as="a" 
                   href="/dashboard"
@@ -677,7 +687,17 @@ export default function Navbar() {
                   leftIcon={<Icon as={FiArchive} />}>
                   Dashboard
                 </Button>
-              {/* )} */}
+              )} */}
+              {auth.role === 'user' && (
+                <Button 
+                  as="a" 
+                  href="/client"
+                  variant="ghost"
+                  justifyContent="flex-start"
+                  leftIcon={<Icon as={FiArchive} />}>
+                  Mi Cuenta
+                </Button>
+              )}
             </>
           )}
         </Stack>
