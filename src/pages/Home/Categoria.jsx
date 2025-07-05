@@ -11,8 +11,7 @@ import {
   Link
 } from "@chakra-ui/react";
 import { Link as RouterLink } from 'react-router-dom';
-import Menu from '../../layout/Menu'
-import PiePagina from '../../layout/PiePagina'
+
 const Categoria = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
