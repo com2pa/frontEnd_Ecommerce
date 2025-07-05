@@ -11,7 +11,8 @@ import {
   Link
 } from "@chakra-ui/react";
 import { Link as RouterLink } from 'react-router-dom';
-
+import Menu from '../../layout/Menu'
+import PiePagina from '../../layout/PiePagina'
 const Categoria = () => {
     const [categories, setCategories] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -40,6 +41,8 @@ const Categoria = () => {
     }, []);
 
     return (
+        <>
+        <Menu/>
         <Box p={{ base: 4, md: 6 }} maxW="1200px" mx="auto">
             <Heading as="h1" size="lg" mb={6} textAlign="center" color="teal.600">
                 Nuestras Categorías
@@ -108,6 +111,8 @@ const Categoria = () => {
                 </SimpleGrid>
             )}
         </Box>
+        <PiePagina/>
+        </>
     );
 };
 
