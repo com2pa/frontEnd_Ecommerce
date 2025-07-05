@@ -54,6 +54,7 @@ const Payment = () => {
   const [exchangeRates, setExchangeRates] = useState({ USD: 1, EUR: 0.85, lastUpdated: new Date() });
   const { isOpen: isInvoiceOpen, onToggle: toggleInvoice } = useDisclosure({ defaultIsOpen: true });
   const [availableAliquots, setAvailableAliquots] = useState([]);
+  const [cart, setCart] = useState(null);
   const toast = useToast();
   const navigate = useNavigate();
   const { auth } = useAuth();
@@ -71,7 +72,7 @@ const Payment = () => {
           axios.get('/api/tasas-bcv/latest'),
           axios.get('/api/aliquots')
         ]);
-        setAvailableAliquots(aliquotsResponse.data);
+       
         // console.log('Available Aliquots:', aliquotsResponse.data);
         console.log('Cart Response:', cartResponse.data);
 
@@ -98,9 +99,10 @@ const Payment = () => {
           EUR: rates.EUR || 0.85,
           lastUpdated: ratesResponse.data.fecha
         });
-
+        setAvailableAliquots(aliquotsResponse.data);
         setCartItems(cartResponse.data.items);
         setIsLoading(false);
+         setCart(cartResponse.data);
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Error al cargar los datos');
@@ -176,45 +178,96 @@ useEffect(() => {
   };
 
   // Calcular totales  
-  const calculateTotals = () => {
-    const subtotal = cartItems.reduce(
-      (sum, item) => sum + (item.product?.price || 0) * item.quantity, 0
-    );
-  
-    // Calcular comisión por método de pago (3% para tarjetas)
-    const paymentFee = paymentMethod === 'credit' ? subtotal * 0.03 : 0;
+ const calculateTotals = () => {
+  // // Verificación inicial segura
+  // if (!cart || !Array.isArray(cart.discount) {
+  //   return {
+  //     subtotal: 0,
+  //     discountAmount: 0,
+  //     discountedSubtotal: 0,
+  //     taxesByAliquot: {},
+  //     paymentFee: 0,
+  //     totals: { USD: 0, EUR: 0, VES: 0 },
+  //     itemsWithDiscounts: []
+  //   };
+  // }
 
-    // Inicializar impuestos para todas las alícuotas disponibles
-    const taxesByAliquot = {};
-    availableAliquots.forEach(aliquot => {
-      taxesByAliquot[`${aliquot.percentage}%`] = 0;
+  // Calcular subtotal sin descuentos y descuentos por producto
+  let subtotal = 0;
+  let totalDiscount = 0;
+  let itemsWithDiscounts = [];
+
+  // Procesar cada item del carrito
+  cartItems.forEach(item => {
+    const itemPrice = item.product?.price || 0;
+    const quantity = item.quantity || 1;
+    const itemSubtotal = itemPrice * quantity;
+    subtotal += itemSubtotal;
+
+    let itemDiscount = 0;
+
+    // Procesar descuentos para este producto
+    cart.discount.forEach(discount => {
+      if (!discount || !Array.isArray(discount.products)) return;
+
+      const productHasDiscount = discount.products.some(product => 
+        product?._id?.toString() === item.product?._id?.toString()
+      );
+
+      if (productHasDiscount) {
+        const currentDate = new Date();
+        const startDate = new Date(discount.start_date);
+        const endDate = new Date(discount.end_date);
+        
+        if (startDate <= currentDate && endDate >= currentDate) {
+          itemDiscount += itemSubtotal * (discount.percentage / 100);
+        }
+      }
     });
 
-    // Calcular impuestos por producto
-    cartItems.forEach(item => {
-      const aliquotRate = (item.product?.aliquots?.percentage ) / 100; 
-      const taxKey = `${aliquotRate * 100}%`;
-      
-      taxesByAliquot[taxKey] += (item.product.price * item.quantity * exchangeRates.USD * aliquotRate);
+    totalDiscount += itemDiscount;
+    itemsWithDiscounts.push({
+      ...item,
+      itemDiscount,
+      finalPrice: itemSubtotal - itemDiscount
     });
+  });
 
-    // Calcular totales en diferentes divisas
-    const totals = {
-      USD: subtotal + paymentFee,
-      EUR: (subtotal + paymentFee) * (1 / exchangeRates.EUR),
-      VES: (subtotal + paymentFee) * exchangeRates.USD + Object.values(taxesByAliquot).reduce((sum, tax) => sum + tax, 0)
-    };
+  // Resto del cálculo permanece igual...
+  const discountedSubtotal = subtotal - totalDiscount;
+  const paymentFee = paymentMethod === 'credit' ? discountedSubtotal * 0.03 : 0;
 
-    return {
-      subtotal,
-      taxesByAliquot,
-      paymentFee,
-      totals
-    };
+  const taxesByAliquot = {};
+  availableAliquots.forEach(aliquot => {
+    taxesByAliquot[`${aliquot.percentage}%`] = 0;
+  });
+
+  itemsWithDiscounts.forEach(item => {
+    const aliquotRate = (item.product?.aliquots?.percentage || 0) / 100; 
+    const taxKey = `${aliquotRate * 100}%`;
+    taxesByAliquot[taxKey] += (item.finalPrice * exchangeRates.USD * aliquotRate);
+  });
+
+  const totals = {
+    USD: discountedSubtotal + paymentFee,
+    EUR: (discountedSubtotal + paymentFee) * (1 / exchangeRates.EUR),
+    VES: (discountedSubtotal + paymentFee) * exchangeRates.USD + 
+         Object.values(taxesByAliquot).reduce((sum, tax) => sum + tax, 0)
   };
 
+  return {
+    subtotal,
+    discountAmount: totalDiscount,
+    discountedSubtotal,
+    taxesByAliquot,
+    paymentFee,
+    totals,
+    itemsWithDiscounts
+  };
+};
+
     // Actualizar la desestructuración para usar taxesByAliquot en lugar de taxesVES
-    const { subtotal, taxesByAliquot, paymentFee, totals } = calculateTotals();
+    const {  subtotal, discountAmount, discountedSubtotal, taxesByAliquot, paymentFee, totals,itemsWithDiscounts } = calculateTotals();
 
 
   const handleSubmit = async (e) => {
@@ -544,6 +597,29 @@ useEffect(() => {
                     ))}
 
                     <Divider my={2} />
+                    {discountAmount > 0 && (
+                        <>
+                          <Divider my={2} />
+                          <Flex justify="space-between">
+                            <Text fontWeight="bold">Descuentos aplicados:</Text>
+                            <Text color="green.500" fontWeight="bold">-{formatCurrency(discountAmount, 'USD')}</Text>
+                          </Flex>
+                          
+                          {/* Opcional: Mostrar descuentos por producto */}
+                          {/* {itemsWithDiscounts.filter(item => item.itemDiscount > 0).map((item, index) => (
+                            <Flex key={index} justify="space-between" pl={4}>
+                              <Text fontSize="sm">{item.product.name} ({item.quantity}x):</Text>
+                              <Text fontSize="sm" color="green.500">-{formatCurrency(item.itemDiscount, 'USD')}</Text>
+                            </Flex>
+                          ))} */}
+                          
+                          <Divider my={2} />
+                          <Flex justify="space-between">
+                            <Text>Subtotal con descuentos:</Text>
+                            <Text fontWeight="bold">{formatCurrency(discountedSubtotal, 'USD')}</Text>
+                          </Flex>
+                        </>
+                      )}
 
                     {/* <SimpleGrid columns={2} spacing={2}>
                       <Text fontWeight="bold">Total en USD:</Text>
