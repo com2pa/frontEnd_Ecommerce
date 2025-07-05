@@ -38,11 +38,11 @@ const Categoria = () => {
         };
 
         fetchData();
-    }, []);
+    }, [toast,setLoading,setCategories]);
 
     return (
         <>
-        <Menu/>
+        
         <Box p={{ base: 4, md: 6 }} maxW="1200px" mx="auto">
             <Heading as="h1" size="lg" mb={6} textAlign="center" color="teal.600">
                 Nuestras Categorías
@@ -60,7 +60,7 @@ const Categoria = () => {
                 >
                     {categories.map(category => (
                         <Box 
-                            key={category._id}
+                            key={category._id || category.id}
                             borderWidth="1px"
                             borderRadius="md"
                             overflow="hidden"
@@ -96,7 +96,7 @@ const Categoria = () => {
                             <Box p={3}>
                                 <Button
                                     as={RouterLink}
-                                    to={`/categorias/${category.id}`}
+                                    to={`/categorias/${category._id || category.id}`}
                                     colorScheme="teal"
                                     size="xs"
                                     width="full"
@@ -111,7 +111,7 @@ const Categoria = () => {
                 </SimpleGrid>
             )}
         </Box>
-        <PiePagina/>
+        
         </>
     );
 };
