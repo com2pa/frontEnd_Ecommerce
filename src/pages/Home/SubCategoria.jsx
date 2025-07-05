@@ -51,7 +51,7 @@ const Subcategorias = () => {
     };
 
     fetchData();
-  }, [id]);
+  }, [id,toast,navigate]);
 
   if (loading) {
     return (
