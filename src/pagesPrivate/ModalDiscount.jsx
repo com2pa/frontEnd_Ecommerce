@@ -58,7 +58,7 @@ const ModalDiscount = ({ isOpen, onClose, discount, onSuccess }) => {
         start_date: '',
         end_date: '',
         productIds: '',
-        online: true,
+        online: false,
       });
     }
 

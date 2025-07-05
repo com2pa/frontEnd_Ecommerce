@@ -255,14 +255,14 @@ const MobileNav = ({ onOpen, ...rest }) => {
               bg={useColorModeValue('white', 'gray.900')}
               borderColor={useColorModeValue('gray.200', 'gray.700')}
             >
-              {/* <MenuItem
+              <MenuItem
                 _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
                 as={ReactRouterLink}
-                to="/profile"
+                to="/home"
                 icon={<FiHome />}
               >
-                Mi Perfil
-              </MenuItem> */}
+                ir a la tienda !
+              </MenuItem>
               <Divider my={1} />
               <MenuItem
                 color="red.500"
