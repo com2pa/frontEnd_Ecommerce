@@ -37,7 +37,7 @@ const Productos = () => {
   const navigate = useNavigate();
   const columns = useBreakpointValue({ base: 1, sm: 2, md: 3, lg: 3 });
   const { auth } = useAuth()
-  console.log(auth?.name)
+  // console.log(auth?.name)
   useEffect(() => {   
   const fetchData = async () => {
     try {
@@ -77,17 +77,17 @@ const Productos = () => {
  const addToCart = async (productId) => {
   try {
     // // Verificar autenticación
-    // if (!auth?.token) {
-    //   toast({
-    //     title: 'Debes iniciar sesión',
-    //     description: 'Necesitas estar logueado para agregar productos al carrito',
-    //     status: 'warning',
-    //     duration: 3000,
-    //     isClosable: true,
-    //   });
-    //   navigate('/login', { state: { from: location } });
-    //   return;
-    // }
+    if (!auth?.token) {
+      toast({
+        title: 'Debes iniciar sesión',
+        description: 'Necesitas estar logueado para agregar productos al carrito',
+        status: 'warning',
+        duration: 3000,
+        isClosable: true,
+      });
+      navigate('/login');
+      return;
+    }
 
     // Validar productId
     if (!productId) {
