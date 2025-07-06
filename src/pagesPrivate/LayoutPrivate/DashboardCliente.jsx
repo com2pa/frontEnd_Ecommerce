@@ -1,5 +1,5 @@
 'use client';
-import { Link as ReactRouterLink, useNavigate } from 'react-router-dom';
+import { Link as ReactRouterLink, useLocation, useNavigate } from 'react-router-dom';
 import {
   IconButton,
   Avatar,
@@ -55,7 +55,25 @@ const LinkItems = [
   { name: 'Soporte', icon: MdSupport, to: '#' },
   
 ];
+const PAGE_TITLES = {
+  '/client': 'Mi Cuenta - Resumen',
+  '/perfil': 'Mi Cuenta - Perfil',
+  '/soporte': 'Mi Cuenta - Soporte',
+  // Agrega más rutas según sea necesario
+};
+//  Hook personalizado para el título
+const usePageTitle = () => {
+  const location = useLocation();
 
+  useEffect(() => {
+    const matchedPath = Object.keys(PAGE_TITLES).find(path => 
+      location.pathname.startsWith(path)
+    );
+    document.title = matchedPath 
+      ? `${PAGE_TITLES[matchedPath]} | MiTienda` 
+      : 'MiTienda';
+  }, [location.pathname]);
+};
 const SidebarContent = ({ onClose, ...rest }) => {
   return (
     <Box
@@ -416,7 +434,7 @@ const DashboardContent = () => {
 
 const ClientDashboard = ({ children }) => {
   const { isOpen, onOpen, onClose } = useDisclosure();
-
+  usePageTitle();
   return (
     <Box minH="100vh" bg={useColorModeValue('gray.100', 'gray.900')}>
       <SidebarContent
