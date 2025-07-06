@@ -41,7 +41,8 @@ import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
 import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-
+import socketIOClient from 'socket.io-client';
+import { motion, AnimatePresence } from 'framer-motion';
 // Definir los elementos de navegación
 const NAV_ITEMS = [
   { href: '/home', label: 'Home' },
@@ -63,9 +64,12 @@ export default function Navbar() {
   } = useDisclosure();
   
   const [cartItems, setCartItems] = useState([]);
-  const [cartCount, setCartCount] = useState(0);
+  // const [cartCount, setCartCount] = useState(0);
+  const cartCount = cartItems.reduce((acc, item) => acc + item.quantity, 0);
   const [isUpdating, setIsUpdating] = useState(false);
-
+  const [notificationCount, setNotificationCount] = useState(0); 
+  const [socket, setSocket] = useState(null);
+  
   const toast = useToast();
   const navigate = useNavigate();
   const location = useLocation();
@@ -90,10 +94,8 @@ export default function Navbar() {
           'Authorization': `Bearer ${auth?.token || ''}`,
         },
         withCredentials: true  
-      });
-      
+      });  
       setCartItems(response.data.items || []);
-      setCartCount(response.data.count || response.data.items?.length || 0);
     } catch (error) {
       console.error('Error fetching cart:', error);
     }
@@ -109,16 +111,16 @@ export default function Navbar() {
     setIsUpdating(true);
     
     try {
+      // Primero actualiza el estado local inmediatamente
       setCartItems(prevItems => {
         const updatedItems = prevItems.map(item =>
           item.product.id === productId 
             ? { ...item, quantity: newQuantity } 
             : item
-        );
-        setCartCount(updatedItems.reduce((acc, item) => acc + item.quantity, 0));
+        );        
         return updatedItems;
       });
-
+      // / Luego hace la llamada API
       await axios.put(
         `/api/cart/${productId}`, 
         { quantity: newQuantity }, 
@@ -129,7 +131,7 @@ export default function Navbar() {
           }
         }
       );
-
+       // Finalmente refresca el carrito desde el servidor
       await fetchCart();
       toast({
         title: 'Cantidad actualizada',
@@ -138,6 +140,7 @@ export default function Navbar() {
         isClosable: true,
       });
     } catch (error) {
+      // Si hay error, vuelve a cargar el estado correcto
       await fetchCart();
       toast({
         title: 'Error',
@@ -154,13 +157,15 @@ export default function Navbar() {
   // Eliminar item del carrito
   const removeItem = async (productId) => {
     try {
+      // Actualización optimista: elimina el item inmediatamente
       setCartItems(prevItems => prevItems.filter(item => item.product.id !== productId));
-      setCartCount(prev => prev - 1);
+      // setCartCount(prev => prev - 1);
       await axios.delete(`/api/cart/${productId}`, {
         headers: {
           'Authorization': `Bearer ${auth?.token || ''}`,
         }
       });
+      // Vuelve a cargar para asegurar consistencia
       await fetchCart();
       toast({
         title: 'Producto eliminado',
@@ -169,6 +174,7 @@ export default function Navbar() {
         isClosable: true,
       });
     } catch (error) {
+      // Si falla, vuelve a cargar el estado correcto
       await fetchCart();
       toast({
         title: 'Error',
@@ -185,6 +191,33 @@ export default function Navbar() {
     navigate('/detail');
     onCartClose();
   };
+
+  // conectando con websocket
+    useEffect(() => {
+      // Conectar al servidor WebSocket
+      const newSocket = socketIOClient('http://localhost:3000', {
+          path: '/socket.io',
+          transports: ['websocket']
+      });
+      setSocket(newSocket);
+  
+      // Unirse como admin
+      newSocket.emit('unirse_admin');
+  
+      // Escuchar nuevos mensajes
+      newSocket.on('nuevo_mensaje', (mensaje) => {
+          console.log('Nuevo mensaje recibido:', mensaje);
+        setNotificationCount(prev => prev + 1);              
+       
+      return
+      });
+      
+    
+      // Limpieza al desmontar
+      return () => {
+        newSocket.disconnect();
+      };
+    }, []);
 
   return (
     <Box>
@@ -317,18 +350,35 @@ export default function Navbar() {
                 _hover={{
                   bg: 'pink.300',
                 }}
-                position="relative">
+                position="relative"
+                as={motion.button}
+                animate={{
+                  scale: cartCount ? [1, 1.1, 1] : 1
+                }}
+                transition={{ duration: 0.5 }}
+                >
                 <Icon as={FiShoppingCart} mr={1} />
-                <Badge 
-                  ml="1" 
-                  colorScheme="green"
-                  position="absolute"
-                  top="-5px"
-                  right="-5px"
-                  borderRadius="full">
-                  {cartCount}
-                </Badge>
+                {cartCount > 0 &&(
+                  <Badge 
+                    ml="1" 
+                    colorScheme="green"
+                    position="absolute"
+                    top="-5px"
+                    right="-5px"
+                    borderRadius="full"
+                    as={motion.span}
+                    animate={{
+                      scale: cartCount ? [1, 1.5, 1] : 1,
+                      backgroundColor: cartCount ? ['#38A169', '#68D391', '#38A169'] : '#38A169'
+                    }}
+                    transition={{ duration: 0.5 }}
+                    >
+                    {notificationCount}
+                  </Badge>
+                ) }                
               </Button>
+
+             
             </>
           )}
         </Stack>
