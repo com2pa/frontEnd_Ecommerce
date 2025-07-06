@@ -47,77 +47,76 @@ import { FiUser, FiShoppingCart, FiTrash2, FiPlus, FiArchive, FiPhone, FiTag } f
 import { useEffect, useState,useCallback } from 'react';
 import axios from 'axios';
 import { useNavigate } from 'react-router-dom';
-// import {  } from '@chakra-ui/react';
 import { useAuth } from '../hooks/useAuth';
 // Datos de categorías (de Menu.jsx)
-const pisoUno = [
-  {
-    name: 'Viveres',
-    description: 'Productos de primera necesidad',
-    href: '#',
-    icon: FiTag,
-  },
-  {
-    name: 'Frutas y Verduras',
-    description: 'Frescos y de temporada',
-    href: '#',
-    icon: FiTag,
-  },
-  {
-    name: 'Farmacia',
-    description: 'Medicamentos y productos de cuidado personal',
-    href: '#',
-    icon: FiTag,
-  },
-  {
-    name: 'Jugueteria',
-    description: 'Juguetes para todas las edades',
-    href: '#',
-    icon: FiTag,
-  },
-  {
-    name: 'Panaderia',
-    description: 'Pan fresco y pastelería',
-    href: '#',
-    icon: FiTag,
-  },
-];
+// const pisoUno = [
+//   {
+//     name: 'Viveres',
+//     description: 'Productos de primera necesidad',
+//     href: '#',
+//     icon: FiTag,
+//   },
+//   {
+//     name: 'Frutas y Verduras',
+//     description: 'Frescos y de temporada',
+//     href: '#',
+//     icon: FiTag,
+//   },
+//   {
+//     name: 'Farmacia',
+//     description: 'Medicamentos y productos de cuidado personal',
+//     href: '#',
+//     icon: FiTag,
+//   },
+//   {
+//     name: 'Jugueteria',
+//     description: 'Juguetes para todas las edades',
+//     href: '#',
+//     icon: FiTag,
+//   },
+//   {
+//     name: 'Panaderia',
+//     description: 'Pan fresco y pastelería',
+//     href: '#',
+//     icon: FiTag,
+//   },
+// ];
 
-const pisoDos = [
-  {
-    name: 'Ropa',
-    description: 'Moda para toda la familia',
-    href: '#',
-    icon: FiTag,
-  },
-  {
-    name: 'Electrónica',
-    description: 'Los últimos dispositivos tecnológicos',
-    href: '#',
-    icon: FiTag,
-  },
-  {
-    name: 'Art.Bebé',
-    description: 'Todo para el cuidado del bebé',
-    href: '#',
-    icon: FiTag,
-  },
-  {
-    name: 'Mayorista',
-    description: 'Productos al por mayor',
-    href: '#',
-    icon: FiTag,
-  },  
-];
+// const pisoDos = [
+//   {
+//     name: 'Ropa',
+//     description: 'Moda para toda la familia',
+//     href: '#',
+//     icon: FiTag,
+//   },
+//   {
+//     name: 'Electrónica',
+//     description: 'Los últimos dispositivos tecnológicos',
+//     href: '#',
+//     icon: FiTag,
+//   },
+//   {
+//     name: 'Art.Bebé',
+//     description: 'Todo para el cuidado del bebé',
+//     href: '#',
+//     icon: FiTag,
+//   },
+//   {
+//     name: 'Mayorista',
+//     description: 'Productos al por mayor',
+//     href: '#',
+//     icon: FiTag,
+//   },  
+// ];
 
-const callsToAction = [
-  { name: 'Contacto', href: '/contactame', icon: FiPhone },
-];
+// const callsToAction = [
+//   { name: 'Contacto', href: '/contactame', icon: FiPhone },
+// ];
 
-const sesionItems = [
-  { name: 'Login', href: '/login', icon: FiUser },
-  { name: 'Register', href: '/register', icon: FiArchive }
-];
+// const sesionItems = [
+//   { name: 'Login', href: '/login', icon: FiUser },
+//   { name: 'Register', href: '/register', icon: FiArchive }
+// ];
 
 export default function Navbar() {
   const { isOpen, onToggle } = useDisclosure();
@@ -131,17 +130,16 @@ export default function Navbar() {
   const [cartItems, setCartItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
   const [isUpdating, setIsUpdating] = useState(false); // Nuevo estado para controlar actualizaciones
-  // const [isPisoUnoOpen, setIsPisoUnoOpen] = useState(false);
-  // const [isPisoDosOpen, setIsPisoDosOpen] = useState(false);
+
   const toast = useToast();
   const navigate = useNavigate();
   // const { auth } = useAuth(null);
-  
+  const drawerSize = useBreakpointValue({ base: "full", md: "md" });
 
-  const goToCart = () => {
-    navigate('/detail');
-    onCartClose();
-  };
+  // const goToCart = () => {
+  //   navigate('/detail');
+  //   onCartClose();
+  // };
 // obteniendo los datos del carrito al cargar el componente
   
       const fetchCart = useCallback(async () => {
@@ -150,13 +148,15 @@ export default function Navbar() {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${auth?.token || ''}`,
-        }  
+        },
+         withCredentials: true  
       });
       
       setCartItems(response.data.items || []);
       setCartCount(response.data.count || response.data.items?.length || 0);
     } catch (error) {
       console.error('Error fetching cart:', error);
+      
     }
   }, [auth?.token]);
   
@@ -314,31 +314,31 @@ export default function Navbar() {
       </Stack>
     );
   };
-  const handleLogout = async () => {
-  try {
-    await axios.get('/api/logout');
-    clearAuth(); // Limpiar el estado de autenticación  
+//   const handleLogout = async () => {
+//   try {
+//     await axios.get('/api/logout');
+//     clearAuth(); // Limpiar el estado de autenticación  
     
-    toast({
-      title: 'Sesión cerrada',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
-    // Luego redirigimos después de un pequeño delay para asegurar que el toast se muestre
-    setTimeout(() => {
-      navigate('/home');
-    }, 100);
-  } catch (error) {
-    toast({
-      title: 'Error',
-      description: error.response?.data?.message || 'Error al cerrar sesión',
-      status: 'error',
-      duration: 3000,
-      isClosable: true,
-    });
-  }
-};
+//     toast({
+//       title: 'Sesión cerrada',
+//       status: 'success',
+//       duration: 3000,
+//       isClosable: true,
+//     });
+//     // Luego redirigimos después de un pequeño delay para asegurar que el toast se muestre
+//     setTimeout(() => {
+//       navigate('/home');
+//     }, 100);
+//   } catch (error) {
+//     toast({
+//       title: 'Error',
+//       description: error.response?.data?.message || 'Error al cerrar sesión',
+//       status: 'error',
+//       duration: 3000,
+//       isClosable: true,
+//     });
+//   }
+// };
 
 
   return (
@@ -709,7 +709,7 @@ export default function Navbar() {
           isOpen={isCartOpen} 
           placement="right" 
           onClose={onCartClose}
-          size={useBreakpointValue({ base: "full", md: "md" })}>
+          size={drawerSize}>
           <DrawerOverlay />
           <DrawerContent>
             <DrawerCloseButton />

@@ -76,10 +76,12 @@ export const SplitScreen = () => {
         email,
         password,
       };
-      const response = await axios.post('/api/login', user);
-      console.log(response)
-      setAuth(response.data);
+      const response = await axios.post('/api/login', user);      
+      // setAuth(response.data);
       setIsLoading(false);
+      localStorage.setItem('authToken', response.data.accesstoken);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      setAuth({ token: response.data.accesstoken, ...response.data.user });
 
       if (response.data) {
         // console.log('Login correcto');

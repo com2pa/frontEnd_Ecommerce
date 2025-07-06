@@ -77,7 +77,7 @@ const Productos = () => {
  const addToCart = async (productId) => {
   try {
     // // Verificar autenticación
-    if (!auth?.token) {
+    if (!auth) {
       toast({
         title: 'Debes iniciar sesión',
         description: 'Necesitas estar logueado para agregar productos al carrito',

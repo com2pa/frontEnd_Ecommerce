@@ -1,21 +1,34 @@
-// import { useContext } from 'react';
-// import { AuthContext } from '../context/AuthContext';
-
-// export const useAuth = () => {
-//   return useContext(AuthContext);
-// };
 // hooks/useAuth.js
-import { useState, createContext, useContext } from 'react';
+import { useState, createContext, useContext, useEffect } from 'react';
 
 const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
-  const [auth, setAuth] = useState(null);
+  const [auth, setAuth] = useState(() => {
+    // Cargar datos del localStorage al inicializar
+    const token = localStorage.getItem('authToken');
+    const user = localStorage.getItem('user');
+    return token && user ? { token, ...JSON.parse(user) } : null;
+  });
 
   const clearAuth = () => {
+    localStorage.removeItem('authToken');
+    localStorage.removeItem('user');
     setAuth(null);
-    // Limpiar cualquier dato de autenticación almacenado (ej. localStorage)
   };
+
+  // Actualizar localStorage cuando cambia el estado de autenticación
+  useEffect(() => {
+    if (auth) {
+      localStorage.setItem('authToken', auth.token);
+      localStorage.setItem('user', JSON.stringify({
+        name: auth.name,
+        role: auth.role,
+        email: auth.email,
+        id: auth.id
+      }));
+    }
+  }, [auth]);
 
   return (
     <AuthContext.Provider value={{ auth, setAuth, clearAuth }}>
@@ -24,6 +37,4 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => {
-  return useContext(AuthContext);
-};
+export const useAuth = () => useContext(AuthContext);

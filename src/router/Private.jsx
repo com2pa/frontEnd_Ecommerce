@@ -47,8 +47,6 @@ const Private = () => {
           {/* dasboard para cliente */}
           <Route path='/client' element={<IndexCliente/>}/>
           <Route  path='/perfil' element={<Cliente/>}/>
-          
-          
         </Route>
       </Routes>
     </>
