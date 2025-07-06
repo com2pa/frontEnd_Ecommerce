@@ -30,7 +30,7 @@ const Cliente = () => {
     };
 
     fetchUserProfile();
-  }, [toast]);
+  }, []);
 
   if (loading) {
     return (
@@ -41,18 +41,6 @@ const Cliente = () => {
       </DashboardCliente>
     );
   }
-
-  if (error) {
-    return (
-      <SidebarWithHeader>
-        <Alert status="error" variant="subtle" flexDirection="column" alignItems="center" justifyContent="center" textAlign="center" minH="200px">
-          <AlertIcon boxSize="40px" mr={0} />
-          <Text mt={4} fontSize="lg">{error}</Text>
-        </Alert>
-      </SidebarWithHeader>
-    );
-  }
-
   return (
       <DashboardCliente>
       <Box p={5} maxW="container.md" mx="auto">
