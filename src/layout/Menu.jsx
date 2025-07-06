@@ -7,11 +7,6 @@ import {
   Stack,
   Collapse,
   Icon,
-  Popover,
-  PopoverTrigger,
-  PopoverContent,
-  useColorModeValue,
-  useBreakpointValue,
   Avatar,
   Badge,
   Menu,
@@ -34,89 +29,29 @@ import {
   Divider,
   useToast,
   useDisclosure,
- 
+  useColorModeValue,
+  useBreakpointValue
 } from '@chakra-ui/react';
 import {
   HamburgerIcon,
-  CloseIcon,
-  ChevronDownIcon,
-  ChevronRightIcon,
-  MinusIcon
+  CloseIcon
 } from '@chakra-ui/icons';
-import { FiUser, FiShoppingCart, FiTrash2, FiPlus, FiArchive, FiPhone, FiTag } from 'react-icons/fi';
-import { useEffect, useState,useCallback } from 'react';
+import { FiUser, FiShoppingCart, FiTrash2, FiArchive } from 'react-icons/fi';
+import { useEffect, useState, useCallback } from 'react';
 import axios from 'axios';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
-// Datos de categorías (de Menu.jsx)
-// const pisoUno = [
-//   {
-//     name: 'Viveres',
-//     description: 'Productos de primera necesidad',
-//     href: '#',
-//     icon: FiTag,
-//   },
-//   {
-//     name: 'Frutas y Verduras',
-//     description: 'Frescos y de temporada',
-//     href: '#',
-//     icon: FiTag,
-//   },
-//   {
-//     name: 'Farmacia',
-//     description: 'Medicamentos y productos de cuidado personal',
-//     href: '#',
-//     icon: FiTag,
-//   },
-//   {
-//     name: 'Jugueteria',
-//     description: 'Juguetes para todas las edades',
-//     href: '#',
-//     icon: FiTag,
-//   },
-//   {
-//     name: 'Panaderia',
-//     description: 'Pan fresco y pastelería',
-//     href: '#',
-//     icon: FiTag,
-//   },
-// ];
 
-// const pisoDos = [
-//   {
-//     name: 'Ropa',
-//     description: 'Moda para toda la familia',
-//     href: '#',
-//     icon: FiTag,
-//   },
-//   {
-//     name: 'Electrónica',
-//     description: 'Los últimos dispositivos tecnológicos',
-//     href: '#',
-//     icon: FiTag,
-//   },
-//   {
-//     name: 'Art.Bebé',
-//     description: 'Todo para el cuidado del bebé',
-//     href: '#',
-//     icon: FiTag,
-//   },
-//   {
-//     name: 'Mayorista',
-//     description: 'Productos al por mayor',
-//     href: '#',
-//     icon: FiTag,
-//   },  
-// ];
-
-// const callsToAction = [
-//   { name: 'Contacto', href: '/contactame', icon: FiPhone },
-// ];
-
-// const sesionItems = [
-//   { name: 'Login', href: '/login', icon: FiUser },
-//   { name: 'Register', href: '/register', icon: FiArchive }
-// ];
+// Definir los elementos de navegación
+const NAV_ITEMS = [
+  { href: '/home', label: 'Home' },
+  { href: '/descuento', label: 'Ofertas' },
+  { href: '/contactame', label: 'Contacto' },
+  { href: '/login', label: 'Login' },
+  { href: '/register', label: 'Registro' },
+  { href: '/client', label: 'Mi Cuenta' },
+  { href: '/dashboard', label: 'Dashboard Admin' }
+];
 
 export default function Navbar() {
   const { isOpen, onToggle } = useDisclosure();
@@ -129,217 +64,127 @@ export default function Navbar() {
   
   const [cartItems, setCartItems] = useState([]);
   const [cartCount, setCartCount] = useState(0);
-  const [isUpdating, setIsUpdating] = useState(false); // Nuevo estado para controlar actualizaciones
+  const [isUpdating, setIsUpdating] = useState(false);
 
   const toast = useToast();
   const navigate = useNavigate();
-  // const { auth } = useAuth(null);
+  const location = useLocation();
   const drawerSize = useBreakpointValue({ base: "full", md: "md" });
 
-  // const goToCart = () => {
-  //   navigate('/detail');
-  //   onCartClose();
-  // };
-// obteniendo los datos del carrito al cargar el componente
-  
-      const fetchCart = useCallback(async () => {
+  // Actualizar título de la página según la ubicación
+  useEffect(() => {
+    if (location?.pathname) {
+      const currentNavItem = NAV_ITEMS.find(item => 
+        location.pathname.startsWith(item.href)
+      );
+      document.title = currentNavItem ? `${currentNavItem.label} | MiTienda` : 'MiTienda';
+    }
+  }, [location]);
+
+  // Obtener carrito
+  const fetchCart = useCallback(async () => {
     try {
       const response = await axios.get('/api/cart', {
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${auth?.token || ''}`,
         },
-         withCredentials: true  
+        withCredentials: true  
       });
       
       setCartItems(response.data.items || []);
       setCartCount(response.data.count || response.data.items?.length || 0);
     } catch (error) {
       console.error('Error fetching cart:', error);
-      
     }
   }, [auth?.token]);
   
- // Cargar el carrito al inicio y cuando cambia el token
   useEffect(() => {  
     fetchCart();
   }, [fetchCart]);
-// función para actualizar la cantidad de un producto en el carrito
-    const updateQuantity = async (productId, newQuantity) => {
-  // Evitar múltiples actualizaciones simultáneas
-  if (isUpdating) return;
-  
-  // Validación básica
-  if (newQuantity < 1) {
-    toast({
-      title: 'Error',
-      description: 'La cantidad debe ser al menos 1',
-      status: 'error',
-      duration: 3000,
-      isClosable: true,
-    });
-    return;
-  }
 
-  setIsUpdating(true);
-  
-  try {
-    // 1. Actualización optimista del estado local
-    setCartItems(prevItems => {
-      const updatedItems = prevItems.map(item =>
-        item.product.id === productId 
-          ? { ...item, quantity: newQuantity } 
-          : item
+  // Actualizar cantidad en carrito
+  const updateQuantity = async (productId, newQuantity) => {
+    if (isUpdating || newQuantity < 1) return;
+    setIsUpdating(true);
+    
+    try {
+      setCartItems(prevItems => {
+        const updatedItems = prevItems.map(item =>
+          item.product.id === productId 
+            ? { ...item, quantity: newQuantity } 
+            : item
+        );
+        setCartCount(updatedItems.reduce((acc, item) => acc + item.quantity, 0));
+        return updatedItems;
+      });
+
+      await axios.put(
+        `/api/cart/${productId}`, 
+        { quantity: newQuantity }, 
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${auth?.token || ''}`,
+          }
+        }
       );
-      
-      // Actualizar el contador del carrito
-      const newCount = updatedItems.reduce((acc, item) => acc + item.quantity, 0);
-      setCartCount(newCount);
-      
-      return updatedItems;
-    });
 
-    // 2. Llamada a la API para actualizar en el servidor
-    const response = await axios.put(
-      `/api/cart/${productId}`, 
-      { quantity: newQuantity }, 
-      {
+      await fetchCart();
+      toast({
+        title: 'Cantidad actualizada',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      await fetchCart();
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'No se pudo actualizar la cantidad',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsUpdating(false);
+    }
+  };
+
+  // Eliminar item del carrito
+  const removeItem = async (productId) => {
+    try {
+      setCartItems(prevItems => prevItems.filter(item => item.product.id !== productId));
+      setCartCount(prev => prev - 1);
+      await axios.delete(`/api/cart/${productId}`, {
         headers: {
-          'Content-Type': 'application/json',
           'Authorization': `Bearer ${auth?.token || ''}`,
         }
-      }
-    );
-
-    // 3. Verificación final para asegurar sincronización
-    // (Opcional - solo si necesitas datos actualizados del servidor)
-    await fetchCart();
-
-    // Notificación de éxito
-    toast({
-      title: 'Cantidad actualizada',
-      status: 'success',
-      duration: 2000,
-      isClosable: true,
-    });
-
-  } catch (error) {
-    // Revertir en caso de error
-    console.error('Error al actualizar cantidad:', error);
-    
-    // Recuperar estado real del servidor
-    await fetchCart();
-    
-    // Notificación de error
-    toast({
-      title: 'Error',
-      description: error.response?.data?.message || 'No se pudo actualizar la cantidad',
-      status: 'error',
-      duration: 3000,
-      isClosable: true,
-    });
-    
-  } finally {
-    setIsUpdating(false);
-  }
-};
-
-  const removeItem = async (productId) => {
-  try {
-    // Actualización optimista
-    setCartItems(prevItems => prevItems.filter(item => item.product.id !== productId));
-    setCartCount(prev => prev - 1);
-    
-    // Llamada a la API para eliminar el producto
-    await axios.delete(`/api/cart/${productId}`, {
-      headers: {
-        'Authorization': `Bearer ${auth?.token || ''}`,
-      }
-    });
-    
-    // Actualizar el carrito completo después de eliminar
-    await fetchCart();
-    
-    toast({
-      title: 'Producto eliminado',
-      status: 'success',
-      duration: 2000,
-      isClosable: true,
-    });
-  } catch (error) {
-    // Revertir en caso de error
-    await fetchCart();
-    
-    toast({
-      title: 'Error',
-      description: error.response?.data?.message || 'No se pudo eliminar el producto',
-      status: 'error',
-      duration: 3000,
-      isClosable: true,
-    });
-  }
-};
-
-  // const total = cartItems.reduce((sum, item) => sum + (item.product?.price || 0) * item.quantity, 0);
-
-  const PisoSubNav = ({ items }) => {
-    const hoverBg = useColorModeValue('pink.50', 'gray.900');
-    return (
-      <Stack>
-        {items.map((item) => (
-          <Box
-            key={item.name}
-            as="a"
-            href={item.href}
-            role={'group'}
-            display={'block'}
-            p={2}
-            rounded={'md'}
-            _hover={{ bg: hoverBg }}
-          >
-            <Stack direction={'row'} align={'center'}>
-              <Icon as={item.icon} color={'pink.400'} w={5} h={5} />
-              <Box>
-                <Text
-                  transition={'all .3s ease'}
-                  _groupHover={{ color: 'pink.400' }}
-                  fontWeight={500}>
-                  {item.name}
-                </Text>
-                <Text fontSize={'sm'}>{item.description}</Text>
-              </Box>
-            </Stack>
-          </Box>
-        ))}
-      </Stack>
-    );
+      });
+      await fetchCart();
+      toast({
+        title: 'Producto eliminado',
+        status: 'success',
+        duration: 2000,
+        isClosable: true,
+      });
+    } catch (error) {
+      await fetchCart();
+      toast({
+        title: 'Error',
+        description: error.response?.data?.message || 'No se pudo eliminar el producto',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
   };
-//   const handleLogout = async () => {
-//   try {
-//     await axios.get('/api/logout');
-//     clearAuth(); // Limpiar el estado de autenticación  
-    
-//     toast({
-//       title: 'Sesión cerrada',
-//       status: 'success',
-//       duration: 3000,
-//       isClosable: true,
-//     });
-//     // Luego redirigimos después de un pequeño delay para asegurar que el toast se muestre
-//     setTimeout(() => {
-//       navigate('/home');
-//     }, 100);
-//   } catch (error) {
-//     toast({
-//       title: 'Error',
-//       description: error.response?.data?.message || 'Error al cerrar sesión',
-//       status: 'error',
-//       duration: 3000,
-//       isClosable: true,
-//     });
-//   }
-// };
 
+  // Ir al carrito de compras
+  const goToCart = () => {
+    navigate('/detail');
+    onCartClose();
+  };
 
   return (
     <Box>
@@ -361,9 +206,7 @@ export default function Navbar() {
           display={{ base: 'flex', md: 'none' }}>
           <IconButton
             onClick={onToggle}
-            icon={
-              isOpen ? <CloseIcon w={3} h={3} /> : <HamburgerIcon w={5} h={5} />
-            }
+            icon={isOpen ? <CloseIcon w={3} h={3} /> : <HamburgerIcon w={5} h={5} />}
             variant={'ghost'}
             aria-label={'Toggle Navigation'}
           />
@@ -382,76 +225,18 @@ export default function Navbar() {
 
           <Flex display={{ base: 'none', md: 'flex' }} ml={10}>
             <Stack direction={'row'} spacing={4}>
-              <Box as="a" p={2} href={'/home'} fontSize={'sm'} fontWeight={500}>
-                Home
-              </Box>
-              {/* Menú Piso Uno */}
-              {/* <Box>
-                <Popover trigger={'hover'} placement={'bottom-start'}>
-                  <PopoverTrigger>
-                    <Box
-                      as="a"
-                      p={2}
-                      href={'#'}
-                      fontSize={'sm'}
-                      fontWeight={500}
-                      color={useColorModeValue('gray.600', 'gray.200')}
-                      _hover={{
-                        textDecoration: 'none',
-                        color: useColorModeValue('gray.800', 'white'),
-                      }}>
-                      Piso Uno
-                    </Box>                    
-                  </PopoverTrigger>
-                  <PopoverContent
-                    border={0}
-                    boxShadow={'xl'}
-                    bg={useColorModeValue('white', 'gray.800')}
-                    p={4}
-                    rounded={'xl'}
-                    minW={'sm'}>
-                    <PisoSubNav items={pisoUno} />
-                  </PopoverContent>
-                </Popover>
-              </Box> */}
-              
-              {/* Menú Piso Dos */}
-              {/* <Box>
-                <Popover trigger={'hover'} placement={'bottom-start'}>
-                  <PopoverTrigger>
-                    <Box
-                      as="a"
-                      p={2}
-                      href={'#'}
-                      fontSize={'sm'}
-                      fontWeight={500}
-                      color={useColorModeValue('gray.600', 'gray.200')}
-                      _hover={{
-                        textDecoration: 'none',
-                        color: useColorModeValue('gray.800', 'white'),
-                      }}>
-                      Piso Dos
-                    </Box>
-                  </PopoverTrigger>
-                  <PopoverContent
-                    border={0}
-                    boxShadow={'xl'}
-                    bg={useColorModeValue('white', 'gray.800')}
-                    p={4}
-                    rounded={'xl'}
-                    minW={'sm'}>
-                    <PisoSubNav items={pisoDos} />
-                  </PopoverContent>
-                </Popover>
-              </Box> */}
-              
-              {/* Otros enlaces */}
-              <Box as="a" p={2} href={'/descuento'} fontSize={'sm'} fontWeight={500}>
-                Ofertas
-              </Box>
-              <Box as="a" p={2} href={'/contactame'} fontSize={'sm'} fontWeight={500}>
-                Contacto
-              </Box>
+              {NAV_ITEMS.filter(item => ['/home', '/descuento', '/contactame'].includes(item.href)).map((navItem) => (
+                <Box 
+                  key={navItem.href}
+                  as="a" 
+                  p={2} 
+                  href={navItem.href}
+                  fontSize={'sm'} 
+                  fontWeight={500}
+                  color={location.pathname.startsWith(navItem.href) ? 'pink.400' : 'inherit'}>
+                  {navItem.label}
+                </Box>
+              ))}
             </Stack>
           </Flex>
         </Flex>
@@ -464,7 +249,6 @@ export default function Navbar() {
           spacing={6}>
           
           {!auth ? (
-            // Usuario no autenticado: SOLO mostrar login y registro
             <>
               <Button
                 as={'a'}
@@ -490,9 +274,7 @@ export default function Navbar() {
                 Registrarse
               </Button>
             </>
-           
           ) : (
-             // Usuario autenticado
             <>
               <Button
                 as={'a'}
@@ -512,30 +294,19 @@ export default function Navbar() {
                   variant={'link'}
                   cursor={'pointer'}
                   minW={0}>
-                  <Avatar
-                    size={'md'}
-                    name={auth.name}
-                    
-                    // src={'https://avatars.dicebear.com/api/male/username.svg'}
-                  />
+                  <Avatar size={'md'} name={auth.name} />
                 </MenuButton>
                 <MenuList>
                     {auth.role === 'user' && (
-                        <>
-                          {/* <MenuItem as="a" href="/client">Mis pedidos</MenuItem>
-                          <MenuItem as="a" href="/client/wishlist">Lista de deseos</MenuItem> */}
-                          <MenuItem as="a" href="/client">Mi Dashboard </MenuItem>
-                        </>
+                        <MenuItem as="a" href="/client">Mi Dashboard</MenuItem>
                     )}
                     {auth.role === 'admin' && (
                         <MenuItem as="a" href="/dashboard">Dashboard Admin</MenuItem>
                     )}
                   <MenuDivider />
-                  {/* <MenuItem onClick={handleLogout} >Cerrar sesión</MenuItem> */}
                 </MenuList>
               </Menu>
 
-              {/* Mostrar carrito solo si hay usuario autenticado */}
               <Button
                 onClick={onCartOpen}
                 display={'inline-flex'}
@@ -561,7 +332,6 @@ export default function Navbar() {
             </>
           )}
         </Stack>
-
       </Flex>
 
       {/* Menú móvil desplegable */}
@@ -571,76 +341,19 @@ export default function Navbar() {
           p={4}
           display={{ md: 'none' }}>
           
-          {/* {/* Piso Uno */}
-          {/* <Box>
-  <Button
-    onClick={onTogglePisoUno} // Necesitarás un estado para esto
-    rightIcon={<ChevronDownIcon transform={isPisoUnoOpen ? 'rotate(180deg)' : ''} />}
-    variant="ghost"
-    textAlign="left"
-    width="full"
-    justifyContent="space-between"
-  >
-    Piso Uno
-  </Button>
-  <Collapse in={isPisoUnoOpen} animateOpacity>
-    <Stack pl={4} borderLeft={1} borderColor={'gray.200'}>
-      {pisoUno.map((item) => (
-        <Button 
-          key={item.name}
-          as="a" 
-          href={item.href}
-          variant="ghost"
-          justifyContent="flex-start"
-          leftIcon={<Icon as={item.icon} />}>
-          {item.name}
-        </Button>
-      ))}
-    </Stack>
-  </Collapse>
-          </Box> */}
+          {NAV_ITEMS.filter(item => ['/home', '/descuento', '/contactame'].includes(item.href)).map((navItem) => (
+            <Button 
+              key={navItem.href}
+              as="a" 
+              href={navItem.href}
+              variant="ghost"
+              justifyContent="flex-start"
+              color={location.pathname.startsWith(navItem.href) ? 'pink.400' : 'inherit'}>
+              {navItem.label}
+            </Button>
+          ))}
           
-          {/* Piso Dos */}
-          {/* <Disclosure>
-            {({ isOpen }) => (
-              <>
-                <DisclosureButton
-                  as={Button}
-                  rightIcon={<ChevronDownIcon transform={isOpen ? 'rotate(180deg)' : ''} />}
-                  variant="ghost"
-                  textAlign="left">
-                  Piso Dos
-                </DisclosureButton>
-                <DisclosurePanel pb={4}>
-                  <Stack pl={4} borderLeft={1} borderColor={'gray.200'}>
-                    {pisoDos.map((item) => (
-                      <Button 
-                        key={item.name}
-                        as="a" 
-                        href={item.href}
-                        variant="ghost"
-                        justifyContent="flex-start"
-                        leftIcon={<Icon as={item.icon} />}>
-                        {item.name}
-                      </Button>
-                    ))}
-                  </Stack>
-                </DisclosurePanel>
-              </>
-            )}
-          </Disclosure>  */}
-          
-          {/* Otros enlaces */}
-          <Button as="a" href="#" variant="ghost" justifyContent="flex-start">
-            Ofertas
-          </Button>
-          <Button as="a" href="#" variant="ghost" justifyContent="flex-start">
-            Contacto
-          </Button>
-          
-          {/* Sesión móvil */}
-         {!auth ? (
-           // Usuario no autenticado (versión móvil)
+          {!auth ? (
             <>
               <Button
                 as="a"
@@ -660,7 +373,6 @@ export default function Navbar() {
               </Button>
             </>
           ) : (
-             // Usuario autenticado (versión móvil)
             <>
               <Button 
                 as="a" 
@@ -668,26 +380,8 @@ export default function Navbar() {
                 variant="ghost"
                 justifyContent="flex-start"
                 leftIcon={<Icon as={FiUser} />}>
-                Hola,  {auth.name} {auth.role === 'admin' && <Badge ml={2} colorScheme="purple">Admin</Badge>}
+                Hola, {auth.name} {auth.role === 'admin' && <Badge ml={2} colorScheme="purple">Admin</Badge>}
               </Button>
-              <Button 
-                as="a" 
-                href="#"
-                variant="ghost"
-                justifyContent="flex-start"
-                leftIcon={<Icon as={FiArchive} />}>
-                Mis pedidos
-              </Button>
-              {/* {auth.role === 'admin' && (
-                <Button 
-                  as="a" 
-                  href="/dashboard"
-                  variant="ghost"
-                  justifyContent="flex-start"
-                  leftIcon={<Icon as={FiArchive} />}>
-                  Dashboard
-                </Button>
-              )} */}
               {auth.role === 'user' && (
                 <Button 
                   as="a" 
@@ -704,7 +398,7 @@ export default function Navbar() {
       </Collapse>
 
       {/* Drawer del carrito */}
-        {auth && (
+      {auth && (
         <Drawer 
           isOpen={isCartOpen} 
           placement="right" 
@@ -786,7 +480,6 @@ export default function Navbar() {
                       size="lg"
                       onClick={goToCart}
                       isLoading={isUpdating}
-                      
                     >
                       Proceder al Pago
                     </Button>
