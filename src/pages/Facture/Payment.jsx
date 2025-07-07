@@ -72,9 +72,9 @@ const Payment = () => {
           axios.get('/api/tasas-bcv/latest'),
           axios.get('/api/aliquots')
         ]);
-       
+        
         // console.log('Available Aliquots:', aliquotsResponse.data);
-        console.log('Cart Response:', cartResponse.data);
+        // console.log('Cart Response:', cartResponse.data);
 
         if (!cartResponse.data?.items || cartResponse.data.items.length === 0) {
           navigate('/cart');
@@ -586,16 +586,32 @@ useEffect(() => {
                     </Flex>
 
                     <Divider my={2} />
-
-                    {Object.entries(taxesByAliquot).map(([aliquot, amount]) => (
+                      {/* mostrando el valor del producto con el precio de la alicuota*/}
+                    {/* {Object.entries(taxesByAliquot).map(([aliquot, amount]) => (
                       amount > 0 && ( // Solo mostrar si hay monto para esta alícuota
                         <Flex key={aliquot} justify="space-between">
                           <Text>IVA ({aliquot}):</Text>
                           <Text>{formatCurrency(amount, 'VES')}</Text>
                         </Flex>
                       )
-                    ))}
-
+                    ))} */}
+                    
+                    {availableAliquots
+                        .filter((aliquot, index, self) => 
+                          self.findIndex(a => a.percentage === aliquot.percentage) === index
+                        )
+                        .map(aliquot => {
+                          const aliquotKey = `${aliquot.percentage}%`;
+                          const taxAmount = taxesByAliquot[aliquotKey] || 0;
+                          
+                          return (
+                            <Flex key={aliquotKey} justify="space-between">
+                              <Text>IVA ({aliquotKey}):</Text>
+                              <Text>{formatCurrency(taxAmount, 'VES')}</Text>
+                            </Flex>
+                          );
+                        })
+                      }
                     <Divider my={2} />
                     {discountAmount > 0 && (
                         <>
