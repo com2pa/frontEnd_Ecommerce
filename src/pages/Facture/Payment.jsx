@@ -133,7 +133,7 @@ useEffect(() => {
         headers: { 'Authorization': `Bearer ${auth?.token || ''}` }
       });
       
-      console.log('Cart Status Response:', response.data);
+      // console.log('Cart Status Response:', response.data);
       if (response.data.isExpired) {
         toast({
           title: 'Carrito expirado',
