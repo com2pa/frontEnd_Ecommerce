@@ -277,7 +277,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
               <MenuItem
                 _hover={{ bg: useColorModeValue('gray.100', 'gray.700') }}
                 as={ReactRouterLink}
-                to="/home"
+                to="/"
                 icon={<FiHome />}
               >
                 ir a la tienda !

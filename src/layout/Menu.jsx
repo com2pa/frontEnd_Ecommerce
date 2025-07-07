@@ -45,7 +45,7 @@ import socketIOClient from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
 // Definir los elementos de navegación
 const NAV_ITEMS = [
-  { href: '/home', label: 'Home' },
+  { href: '/', label: 'Home' },
   { href: '/descuento', label: 'Ofertas' },
   { href: '/contactame', label: 'Contacto' },
   { href: '/login', label: 'Login' },

@@ -16,7 +16,7 @@ export const Public = () => {
   return (
     <>
       <Routes>       
-        <Route path='/home' element={<Home />}/>
+        <Route path='/' element={<Home />}/>
         <Route path='/login' element={<Login />} />
         <Route path='/register' element={<Register />} />       
         <Route path='/verify/:id/:token' element={<Verify />} />
