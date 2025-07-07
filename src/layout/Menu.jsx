@@ -194,30 +194,32 @@ export default function Navbar() {
 
   // conectando con websocket
     useEffect(() => {
-      // Conectar al servidor WebSocket
       const newSocket = socketIOClient('http://localhost:3000', {
-          path: '/socket.io',
-          transports: ['websocket']
+        path: '/socket.io',
+        transports: ['websocket']
       });
       setSocket(newSocket);
-  
-      // Unirse como admin
-      newSocket.emit('unirse_admin');
-  
-      // Escuchar nuevos mensajes
+
+      // Evento existente (no lo removemos)
       newSocket.on('nuevo_mensaje', (mensaje) => {
-          console.log('Nuevo mensaje recibido:', mensaje);
-        setNotificationCount(prev => prev + 1);              
-       
-      return
+        console.log('Nuevo mensaje recibido:', mensaje);
+        setNotificationCount(prev => prev + 1);
       });
-      
-    
-      // Limpieza al desmontar
+
+      // Nuevo evento para actualización de carrito
+      newSocket.on('carrito_actualizado', (data) => {
+        console.log('Carrito actualizado:', data);
+        // Solo actualizar si el evento es para el usuario actual
+        if (!auth || data.userId === auth.id) {
+          fetchCart(); // Recargar el carrito
+          setNotificationCount(prev => prev + 1);
+        }
+      });
+
       return () => {
         newSocket.disconnect();
-      };
-    }, []);
+    };
+    }, [auth, fetchCart]); // Añadimos fetchCart a las dependencias;
 
   return (
     <Box>

@@ -27,45 +27,44 @@ import {
 import { Link as RouterLink, useParams, useNavigate } from 'react-router-dom';
 import { ChevronRightIcon, ChevronLeftIcon, StarIcon } from "@chakra-ui/icons";
 import { useAuth } from "../../hooks/useAuth";
-
+// import socketIOClient from 'socket.io-client';
+import { motion, AnimatePresence } from 'framer-motion';
 const Productos = () => {
   const { id } = useParams();
   const [subcategory, setSubcategory] = useState(null);
   const [products, setProducts] = useState([]);
   const [loading, setLoading] = useState(true);
+  // const [notificationCount, setNotificationCount] = useState(0); 
+  const [socket, setSocket] = useState(null);
   const toast = useToast();
   const navigate = useNavigate();
   const columns = useBreakpointValue({ base: 1, sm: 2, md: 3, lg: 3 });
   const { auth } = useAuth()
-  // console.log(auth?.name)
-  useEffect(() => {   
+  
+  useEffect(() => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      // Primero obtenemos la subcategoría
-      const subcatResponse = await axios.get(`/api/subcategory/${id}`);
-      setSubcategory(subcatResponse.data);
-      
-      // Luego obtenemos los productos completos
-      const productsResponse = await axios.get(`/api/product/subcategory/${id}`);
-      // Asegúrate que productsResponse.data es un array
-      setProducts(Array.isArray(productsResponse.data) ? productsResponse.data : []);
-      
+      const response = await axios.get(`/api/subcategory/${id}`);
+      setSubcategory(response.data);
+      setProducts(response.data.products || []);
     } catch (error) {
-      // Manejo de errores
       toast({
         title: 'Error',
-        description: error.response?.data?.message || 'Error al cargar la información',
+        description: error.response?.data?.message || 'Error al cargar los productos',
         status: 'error',
         duration: 3000,
-      })
+        isClosable: true,
+      });
+      navigate(-1);
     } finally {
       setLoading(false);
     }
-};
-    fetchData();
-  }, [id,toast]);
+  };
 
+  fetchData();
+}, [id, toast, navigate]);
+ 
   if (loading) {
     return (
       <Flex justify="center" py={20}>
@@ -108,6 +107,9 @@ const Productos = () => {
       { productId, quantity: 1 },
       config
     );
+    if(socket){
+      socket.emit('nuevo_mensaje')
+    }
 
     // Mostrar notificación de éxito con mensaje simple
     toast({
@@ -263,7 +265,7 @@ const Productos = () => {
                   <Button 
                     colorScheme="teal"
                     size="sm"
-                    isDisabled={!product.isActive}
+                    // isDisabled={!product.isActive}
                     onClick={() => addToCart(product.id)}
                     variant="solid"
                   >
