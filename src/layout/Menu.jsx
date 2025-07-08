@@ -260,7 +260,7 @@ export default function Navbar() {
 
           <Flex display={{ base: 'none', md: 'flex' }} ml={10}>
             <Stack direction={'row'} spacing={4}>
-              {NAV_ITEMS.filter(item => ['/home', '/descuento', '/contactame'].includes(item.href)).map((navItem) => (
+              {NAV_ITEMS.filter(item => ['/', '/descuento', '/contactame'].includes(item.href)).map((navItem) => (
                 <Box 
                   key={navItem.href}
                   as="a" 
