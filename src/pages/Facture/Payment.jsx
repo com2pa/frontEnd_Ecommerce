@@ -354,7 +354,7 @@ useEffect(() => {
           <Button
             leftIcon={<FiArrowLeft />}
             variant="ghost"
-            onClick={() => navigate('/cart')}
+            onClick={() => navigate('/detail')}
             mr={4}
           >
             Volver
@@ -589,7 +589,7 @@ useEffect(() => {
                       {/* mostrando el valor del producto con el precio de la alicuota*/}
                     {/* {Object.entries(taxesByAliquot).map(([aliquot, amount]) => (
                       amount > 0 && ( // Solo mostrar si hay monto para esta alícuota
-                        <Flex key={aliquot} justify="space-between">
+                        <Flex key={aliquot.code} justify="space-between">
                           <Text>IVA ({aliquot}):</Text>
                           <Text>{formatCurrency(amount, 'VES')}</Text>
                         </Flex>
@@ -597,11 +597,11 @@ useEffect(() => {
                     ))} */}
                     
                     {availableAliquots
-                        .filter((aliquot, index, self) => 
-                          self.findIndex(a => a.percentage === aliquot.percentage) === index
-                        )
+                        // .filter((aliquot, index, self) => 
+                        //   self.findIndex(a => a.percentage === aliquot.percentage) === index
+                        // )
                         .map(aliquot => {
-                          const aliquotKey = `${aliquot.percentage}%`;
+                          const aliquotKey = `${aliquot.percentage}% de ${aliquot.code}`;
                           const taxAmount = taxesByAliquot[aliquotKey] || 0;
                           
                           return (
