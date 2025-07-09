@@ -178,7 +178,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
     try {
       const response = await axios.get('/api/logout');
       clearAuth();
-      navigate('/login');
+      navigate('/');
 
       toast({
         title: 'Sesión cerrada',

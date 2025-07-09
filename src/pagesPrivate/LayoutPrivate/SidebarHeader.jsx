@@ -159,7 +159,7 @@ const MobileNav = ({ onOpen, ...rest }) => {
         // auth.clearAuth(); 
       // }
       clearAuth()
-      navigate('/home');
+      navigate('/');
 
       toast({
         title: 'Sesión cerrada',
