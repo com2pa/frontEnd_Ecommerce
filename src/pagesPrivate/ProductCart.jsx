@@ -124,10 +124,8 @@ const ProductCard = ({
                       fontWeight='medium'
                     >
                       Alicuota:
-                    </Text>{' '}
-                    {/* {product.aliquots.percentage}% */}
-                    {product.aliquots.percentage ? `${product.aliquots.percentage}%` : 'N/A'}
-                   
+                    </Text>{' '}                    
+                    { `${product.aliquots.percentage}% `}                    
                   </Text>
                 )}
               </Flex>
