@@ -23,9 +23,19 @@ import {
   Flex,
   IconButton,
   Tooltip,
-  Badge
+  Badge,
+  Modal,
+  ModalOverlay,
+  ModalContent,
+  ModalHeader,
+  ModalFooter,
+  ModalBody,
+  ModalCloseButton,
+  FormControl,
+  FormLabel,
+  Textarea
 } from '@chakra-ui/react';
-import { FiRefreshCw, FiCalendar, } from 'react-icons/fi';
+import { FiRefreshCw, FiCalendar, FiSave, FiPlus } from 'react-icons/fi';
 import { FaEuroSign } from "react-icons/fa";
 import { LuCircleDollarSign } from "react-icons/lu";
 import SidebarHeader from './LayoutPrivate/SidebarHeader';
@@ -39,48 +49,56 @@ const Bcv = () => {
   const [date, setDate] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [isLoadingHistorical, setIsLoadingHistorical] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
+  const [isCreating, setIsCreating] = useState(false);
+  const [allRates, setAllRates] = useState([]);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [manualRate, setManualRate] = useState({
+    fecha: moment().format('YYYY-MM-DD'),
+    moneda: 'USD',
+    tasa_oficial: '',
+    fuente_url: 'https://www.bcv.org.ve'
+  });
   const toast = useToast();
 
   // Obtener tasas más recientes
-  // En la función fetchLatestRates
-const fetchLatestRates = async () => {
-  setIsLoading(true);
-  try {
-    const response = await axios.get('/api/tasas-bcv/latest');
-    
-    // Normalizar los datos recibidos
-    const normalizedRates = Array.isArray(response.data.tasas) 
-      ? response.data.tasas
-      : response.data.tasa 
-        ? [{
-            moneda: response.data.moneda,
-            tasa: response.data.tasa,
-            unidad_medida: response.data.unidad_medida,
-            fecha: response.data.fecha
-          }]
-        : [];
+  const fetchLatestRates = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.get('/api/tasas-bcv/latest');
+      
+      const normalizedRates = Array.isArray(response.data.tasas) 
+        ? response.data.tasas
+        : response.data.tasa 
+          ? [{
+              moneda: response.data.moneda,
+              tasa: response.data.tasa,
+              unidad_medida: response.data.unidad_medida,
+              fecha: response.data.fecha
+            }]
+          : [];
 
-    setRates(normalizedRates);
-    
-    toast({
-      title: 'Datos actualizados',
-      description: 'Se han obtenido las tasas más recientes',
-      status: 'success',
-      duration: 3000,
-      isClosable: true,
-    });
-  } catch (error) {
-    toast({
-      title: 'Error al obtener la tasa mas reciente.',
+      setRates(normalizedRates);
+      
+      toast({
+        title: 'Datos actualizados',
+        description: 'Se han obtenido las tasas más recientes',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+    } catch (error) {
+      toast({
+        title: 'Error al obtener la tasa mas reciente.',
         description: error.response?.data?.error || 'Error desconocido',
         status: 'error',
         duration: 3000,
         isClosable: true,
-    })
-  } finally {
-    setIsLoading(false);
-  }
-};
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   // Obtener tasa histórica
   const fetchHistoricalRate = async () => {
@@ -103,15 +121,15 @@ const fetchLatestRates = async () => {
           fecha: moment(date).format('YYYY-MM-DD')
         }
       });
-       const rateData = {
-      moneda: response.data.moneda || currency,
-      tasa: response.data.tasa_oficial || response.data.tasa,
-      unidad_medida: response.data.unidad_medida || 'VES',
-      fecha: response.data.fecha || date,
-      fuente_url: response.data.fuente_url || 'https://www.bcv.org.ve'
-    };
+      const rateData = {
+        moneda: response.data.moneda || currency,
+        tasa: response.data.tasa_oficial || response.data.tasa,
+        unidad_medida: response.data.unidad_medida || 'VES',
+        fecha: response.data.fecha || date,
+        fuente_url: response.data.fuente_url || 'https://www.bcv.org.ve'
+      };
 
-    setHistoricalRate(rateData);
+      setHistoricalRate(rateData);
       toast({
         title: 'Consulta exitosa',
         description: `Tasa histórica para ${currency} obtenida`,
@@ -133,9 +151,79 @@ const fetchLatestRates = async () => {
     }
   };
 
-  // Cargar tasas al montar el componente
+  // Obtener todas las tasas históricas
+  const fetchAllRates = async () => {
+    try {
+      const response = await axios.get('/api/tasas-bcv');
+      setAllRates(response.data);
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error.response?.data?.error || 'Error al obtener tasas históricas',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    }
+  };
+
+  // Guardar tasas automáticamente
+  const handleSaveRates = async () => {
+    setIsSaving(true);
+    try {
+      const response = await axios.post('/api/tasas-bcv/save');
+      toast({
+        title: 'Tasas guardadas',
+        description: 'Las tasas se han guardado correctamente',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      fetchLatestRates();
+    } catch (error) {
+      toast({
+        title: 'Error al guardar tasas',
+        description: error.response?.data?.error || 'Error desconocido',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  // Crear tasa manualmente
+  const handleCreateRate = async () => {
+    setIsCreating(true);
+    try {
+      const response = await axios.post('/api/tasas-bcv/create', manualRate);
+      toast({
+        title: 'Tasa creada',
+        description: 'La tasa se ha creado correctamente',
+        status: 'success',
+        duration: 3000,
+        isClosable: true,
+      });
+      setIsModalOpen(false);
+      fetchAllRates();
+    } catch (error) {
+      toast({
+        title: 'Error al crear tasa',
+        description: error.response?.data?.error || 'Error desconocido',
+        status: 'error',
+        duration: 3000,
+        isClosable: true,
+      });
+    } finally {
+      setIsCreating(false);
+    }
+  };
+
+  // Cargar datos al montar el componente
   useEffect(() => {
     fetchLatestRates();
+    fetchAllRates();
   }, []);
 
   return (
@@ -150,15 +238,38 @@ const fetchLatestRates = async () => {
           <CardHeader>
             <Flex justify="space-between" align="center">
               <Heading size="md">Tasas Actuales</Heading>
-              <Tooltip label="Actualizar tasas">
-                <IconButton
-                  icon={<FiRefreshCw />}
-                  onClick={fetchLatestRates}
-                  isLoading={isLoading}
-                  aria-label="Actualizar tasas"
-                  colorScheme="teal"
-                />
-              </Tooltip>
+              <Flex>
+                <Tooltip label="Guardar tasas">
+                  <Button
+                    leftIcon={<FiSave />}
+                    onClick={handleSaveRates}
+                    isLoading={isSaving}
+                    colorScheme="green"
+                    mr={2}
+                  >
+                    Guardar
+                  </Button>
+                </Tooltip>
+                <Tooltip label="Crear tasa manual">
+                  <Button
+                    leftIcon={<FiPlus />}
+                    onClick={() => setIsModalOpen(true)}
+                    colorScheme="blue"
+                    mr={2}
+                  >
+                    Crear Manual
+                  </Button>
+                </Tooltip>
+                <Tooltip label="Actualizar tasas">
+                  <IconButton
+                    icon={<FiRefreshCw />}
+                    onClick={fetchLatestRates}
+                    isLoading={isLoading}
+                    aria-label="Actualizar tasas"
+                    colorScheme="teal"
+                  />
+                </Tooltip>
+              </Flex>
             </Flex>
           </CardHeader>
           <CardBody>
@@ -205,6 +316,72 @@ const fetchLatestRates = async () => {
             </Text>
           </CardFooter>
         </Card>
+
+        {/* Modal para creación manual */}
+        <Modal isOpen={isModalOpen} onClose={() => setIsModalOpen(false)}>
+          <ModalOverlay />
+          <ModalContent>
+            <ModalHeader>Crear Tasa Manualmente</ModalHeader>
+            <ModalCloseButton />
+            <ModalBody>
+              <Stack spacing={4}>
+                <FormControl>
+                  <FormLabel>Fecha</FormLabel>
+                  <Input
+                    type="date"
+                    value={manualRate.fecha}
+                    onChange={(e) => setManualRate({...manualRate, fecha: e.target.value})}
+                    max={moment().format('YYYY-MM-DD')}
+                  />
+                </FormControl>
+                
+                <FormControl>
+                  <FormLabel>Moneda</FormLabel>
+                  <Select
+                    value={manualRate.moneda}
+                    onChange={(e) => setManualRate({...manualRate, moneda: e.target.value})}
+                  >
+                    <option value="USD">Dólar (USD)</option>
+                    <option value="EUR">Euro (EUR)</option>
+                  </Select>
+                </FormControl>
+                
+                <FormControl>
+                  <FormLabel>Tasa Oficial</FormLabel>
+                  <Input
+                    type="number"
+                    value={manualRate.tasa_oficial}
+                    onChange={(e) => setManualRate({...manualRate, tasa_oficial: e.target.value})}
+                    placeholder="Ej: 35.50"
+                    step="0.01"
+                  />
+                </FormControl>
+                
+                <FormControl>
+                  <FormLabel>Fuente URL</FormLabel>
+                  <Input
+                    type="url"
+                    value={manualRate.fuente_url}
+                    onChange={(e) => setManualRate({...manualRate, fuente_url: e.target.value})}
+                    placeholder="https://www.bcv.org.ve"
+                  />
+                </FormControl>
+              </Stack>
+            </ModalBody>
+            <ModalFooter>
+              <Button variant="ghost" mr={3} onClick={() => setIsModalOpen(false)}>
+                Cancelar
+              </Button>
+              <Button
+                colorScheme="blue"
+                onClick={handleCreateRate}
+                isLoading={isCreating}
+              >
+                Guardar Tasa
+              </Button>
+            </ModalFooter>
+          </ModalContent>
+        </Modal>
 
         {/* Sección de consulta histórica */}
         <Card boxShadow="md">
@@ -281,7 +458,43 @@ const fetchLatestRates = async () => {
               </Table>
             )}
 
-            {!historicalRate && !isLoadingHistorical && (
+            {/* Tabla de todas las tasas históricas */}
+            <Box mt={8}>
+              <Heading size="sm" mb={4}>Todas las Tasas Registradas</Heading>
+              <Table variant="striped" colorScheme="gray">
+                <Thead>
+                  <Tr>
+                    <Th>Moneda</Th>
+                    <Th isNumeric>Tasa</Th>
+                    <Th>Unidad</Th>
+                    <Th>Fecha</Th>
+                    <Th>Fuente</Th>
+                  </Tr>
+                </Thead>
+                <Tbody>
+                  {allRates.map((rate) => (
+                    <Tr key={rate._id}>
+                      <Td>{rate.moneda}</Td>
+                      <Td isNumeric>
+                        {rate.tasa_oficial.toLocaleString('es-VE', {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2
+                        })}
+                      </Td>
+                      <Td>{rate.unidad_medida}</Td>
+                      <Td>{moment(rate.fecha).format('DD/MM/YYYY')}</Td>
+                      <Td>
+                        <a href={rate.fuente_url} target="_blank" rel="noopener noreferrer">
+                          {rate.fuente_url === 'https://www.bcv.org.ve' ? 'BCV' : 'Manual'}
+                        </a>
+                      </Td>
+                    </Tr>
+                  ))}
+                </Tbody>
+              </Table>
+            </Box>
+
+            {!historicalRate && !isLoadingHistorical && allRates.length === 0 && (
               <Text textAlign="center" color="gray.500" py={4}>
                 No hay datos históricos para mostrar. Realice una consulta.
               </Text>
