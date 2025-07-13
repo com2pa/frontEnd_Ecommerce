@@ -153,10 +153,15 @@ const MobileNav = ({ onOpen, ...rest }) => {
   const handleLogout = async () => {
    
     try {
-      const response = await axios.get('/api/logout');
+      const response = await axios.get('/api/logout',{},{
+        headers: {
+        Authorization: `Bearer ${auth.token}`
+      },
+      withCredentials: true 
+    });
       // Limpiar el estado de autenticación
       // if (auth?.clearAuth) {
-        // auth.clearAuth(); 
+      //   auth.clearAuth(); 
       // }
       clearAuth()
       navigate('/');
@@ -169,6 +174,8 @@ const MobileNav = ({ onOpen, ...rest }) => {
         isClosable: true,
       });
     } catch (error) {
+      clearAuth()
+      navigate('/');
       toast({
         title: 'Error',
         description: error.response?.data?.message || 'Error al cerrar sesión',

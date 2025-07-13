@@ -41,6 +41,7 @@ import { LuCircleDollarSign } from "react-icons/lu";
 import SidebarHeader from './LayoutPrivate/SidebarHeader';
 import axios from 'axios';
 import moment from 'moment';
+import { useAuth } from '../hooks/useAuth';
 
 const Bcv = () => {
   const [rates, setRates] = useState([]);
@@ -60,6 +61,7 @@ const Bcv = () => {
     fuente_url: 'https://www.bcv.org.ve'
   });
   const toast = useToast();
+  const auth = useAuth();
 
   // Obtener tasas más recientes
   const fetchLatestRates = async () => {
@@ -171,15 +173,19 @@ const Bcv = () => {
   const handleSaveRates = async () => {
     setIsSaving(true);
     try {
-      const response = await axios.post('/api/tasas-bcv/save');
+      const response = await axios.post('/api/tasas-bcv/save',{},{headers: {
+          Authorization: `Bearer ${auth.token}`
+        }} );        
       toast({
         title: 'Tasas guardadas',
-        description: 'Las tasas se han guardado correctamente',
+        description: response.data.message || 'Tasas Automatica guardadas correctamente',
         status: 'success',
         duration: 3000,
         isClosable: true,
       });
-      fetchLatestRates();
+      // actualizamos ambas listas
+       await fetchLatestRates();
+       await fetchAllRates();
     } catch (error) {
       toast({
         title: 'Error al guardar tasas',
@@ -197,16 +203,17 @@ const Bcv = () => {
   const handleCreateRate = async () => {
     setIsCreating(true);
     try {
-      const response = await axios.post('/api/tasas-bcv/create', manualRate);
+      const response = await axios.post('/api/tasas-bcv/create', manualRate, { headers: { Authorization: `Bearer ${auth.token}` } });
       toast({
         title: 'Tasa creada',
-        description: 'La tasa se ha creado correctamente',
+        description: response.data.message || 'Tasa creada correctamente',
         status: 'success',
         duration: 3000,
         isClosable: true,
       });
       setIsModalOpen(false);
-      fetchAllRates();
+      // Actualizar ambos listados
+      await Promise.all([fetchLatestRates(), fetchAllRates()]);
     } catch (error) {
       toast({
         title: 'Error al crear tasa',
@@ -472,8 +479,8 @@ const Bcv = () => {
                   </Tr>
                 </Thead>
                 <Tbody>
-                  {allRates.map((rate) => (
-                    <Tr key={rate._id}>
+                  {allRates.map((rate,index) => (
+                    <Tr key={rate._id || `rate-${index}`}>
                       <Td>{rate.moneda}</Td>
                       <Td isNumeric>
                         {rate.tasa_oficial.toLocaleString('es-VE', {
