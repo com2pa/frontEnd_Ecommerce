@@ -142,7 +142,7 @@ useEffect(() => {
           duration: 3000,
           isClosable: true,
         });
-        navigate('/home');
+        navigate('/');
       }
     } catch (error) {
       console.error('Error al verificar el carrito:', error);
