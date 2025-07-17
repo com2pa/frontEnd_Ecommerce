@@ -68,7 +68,7 @@ const Bcv = () => {
     setIsLoading(true);
     try {
       const response = await axios.get('/api/tasas-bcv/latest');
-      
+      // console.log(response,'tasa')
       const normalizedRates = Array.isArray(response.data.tasas) 
         ? response.data.tasas
         : response.data.tasa 
