@@ -51,7 +51,7 @@ const Payment = () => {
     zipCode: '',
     country: '',
   });
-  const [exchangeRates, setExchangeRates] = useState({ USD: 1, EUR: 0.85, lastUpdated: new Date() });
+  const [exchangeRates, setExchangeRates] = useState();
   const { isOpen: isInvoiceOpen, onToggle: toggleInvoice } = useDisclosure({ defaultIsOpen: true });
   const [availableAliquots, setAvailableAliquots] = useState([]);
   const [cart, setCart] = useState(null);
@@ -59,11 +59,12 @@ const Payment = () => {
   const navigate = useNavigate();
   const { auth } = useAuth();
   const [secondsSinceUpdate, setSecondsSinceUpdate] = useState(0);
+
   useEffect(() => {
     const fetchCartAndRates = async () => {
       try {
         // Obtener carrito
-        const [cartResponse, ratesResponse,aliquotsResponse] = await Promise.all([
+        const [cartResponse, ratesResponse, aliquotsResponse] = await Promise.all([
           axios.get('/api/cart', {
             headers: {
               'Authorization': `Bearer ${auth?.token || ''}`,
@@ -73,9 +74,6 @@ const Payment = () => {
           axios.get('/api/aliquots')
         ]);
         
-        // console.log('Available Aliquots:', aliquotsResponse.data);
-        // console.log('Cart Response:', cartResponse.data);
-
         if (!cartResponse.data?.items || cartResponse.data.items.length === 0) {
           navigate('/cart');
           toast({
@@ -95,14 +93,14 @@ const Payment = () => {
         }, {});
         
         setExchangeRates({
-          USD: rates.USD || 1,
-          EUR: rates.EUR || 0.85,
+          USD: rates.USD,
+          EUR: rates.EUR,
           lastUpdated: ratesResponse.data.fecha
         });
         setAvailableAliquots(aliquotsResponse.data);
         setCartItems(cartResponse.data.items);
         setIsLoading(false);
-         setCart(cartResponse.data);
+        setCart(cartResponse.data);
       } catch (err) {
         console.error('Error fetching data:', err);
         setError('Error al cargar los datos');
@@ -112,54 +110,64 @@ const Payment = () => {
 
     fetchCartAndRates();
   }, [auth?.token, navigate, toast]);
-// actualiza el contrador de tiempo cada segundo
+
+  // Contador de tiempo de actualización corregido
   useEffect(() => {
-  const interval = setInterval(() => {
-    if (exchangeRates.lastUpdated) {
-      const now = new Date();
-      const lastUpdated = new Date(exchangeRates.lastUpdated);
-      const seconds = Math.floor((now - lastUpdated) / 1000);
-      setSecondsSinceUpdate(seconds);
-    }
-  }, 1000);
-
-  return () => clearInterval(interval);
-}, [exchangeRates.lastUpdated]);
-// efecto para verificar periodicamente si el carrito a experado y redirigir al usuario al home
-useEffect(() => {
-  const checkCartExpiration = async () => {
-    try {
-      const response = await axios.get('/api/cart/check-status', {
-        headers: { 'Authorization': `Bearer ${auth?.token || ''}` }
-      });
+    let interval;
+    
+    if (exchangeRates?.lastUpdated) {
+      const updateCounter = () => {
+        const now = new Date();
+        const lastUpdated = new Date(exchangeRates.lastUpdated);
+        const seconds = Math.floor((now - lastUpdated) / 1000);
+        setSecondsSinceUpdate(seconds);
+      };
       
-      // console.log('Cart Status Response:', response.data);
-      if (response.data.isExpired) {
-        toast({
-          title: 'Carrito expirado',
-          description: 'Tu carrito ha sido eliminado por inactividad',
-          status: 'info',
-          duration: 3000,
-          isClosable: true,
-        });
-        navigate('/');
-      }
-    } catch (error) {
-      console.error('Error al verificar el carrito:', error);
+      // Ejecutar inmediatamente para evitar retraso inicial
+      updateCounter();
+      
+      // Configurar intervalo
+      interval = setInterval(updateCounter, 1000);
     }
-  };
 
-  const interval = setInterval(checkCartExpiration, 60 * 1000); // Cada minuto
-  return () => clearInterval(interval);
-},[auth?.token, navigate, toast]);
+    return () => {
+      if (interval) clearInterval(interval);
+    };
+  }, [exchangeRates]);
 
+  // Efecto para verificar periodicamente si el carrito ha expirado
+  useEffect(() => {
+    const checkCartExpiration = async () => {
+      try {
+        const response = await axios.get('/api/cart/check-status', {
+          headers: { 'Authorization': `Bearer ${auth?.token || ''}` }
+        });
+        
+        if (response.data.isExpired) {
+          toast({
+            title: 'Carrito expirado',
+            description: 'Tu carrito ha sido eliminado por inactividad',
+            status: 'info',
+            duration: 3000,
+            isClosable: true,
+          });
+          navigate('/');
+        }
+      } catch (error) {
+        console.error('Error al verificar el carrito:', error);
+      }
+    };
 
-  // funcion para formatear el tiempo de actualización
+    const interval = setInterval(checkCartExpiration, 60 * 1000); // Cada minuto
+    return () => clearInterval(interval);
+  }, [auth?.token, navigate, toast]);
+
   const formatTimeSinceUpdate = (seconds) => {
     const minutes = Math.floor(seconds / 60);
     const remainingSeconds = seconds % 60;
     return `${minutes}m ${remainingSeconds}s`;
   };
+
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setFormData(prev => ({
@@ -168,107 +176,116 @@ useEffect(() => {
     }));
   };
 
-  // Función para formatear moneda
   const formatCurrency = (value, currency = 'USD') => {
-    return new Intl.NumberFormat('es-VE', {
+    if (!value || isNaN(value)) return '$0.00';
+    
+    const options = {
       style: 'currency',
       currency,
       minimumFractionDigits: 2,
-    }).format(value);
+      maximumFractionDigits: 2
+    };
+
+    if (currency === 'VES') {
+      return new Intl.NumberFormat('es-VE', {
+        ...options,
+        currencyDisplay: 'code'
+      }).format(value).replace('VES', '') + ' VES';
+    }
+
+    return new Intl.NumberFormat('es-VE', options).format(value);
   };
 
-  // Calcular totales  
- const calculateTotals = () => {
-  // // Verificación inicial segura
-  // if (!cart || !Array.isArray(cart.discount) {
-  //   return {
-  //     subtotal: 0,
-  //     discountAmount: 0,
-  //     discountedSubtotal: 0,
-  //     taxesByAliquot: {},
-  //     paymentFee: 0,
-  //     totals: { USD: 0, EUR: 0, VES: 0 },
-  //     itemsWithDiscounts: []
-  //   };
-  // }
+  const calculateTotals = () => {
+    if (!cart || !Array.isArray(cart.discount)) {
+      return {
+        subtotal: 0,
+        discountAmount: 0,
+        discountedSubtotal: 0,
+        taxesByAliquot: {},
+        paymentFee: 0,
+        totals: { USD: 0, EUR: 0, VES: 0 },
+        itemsWithDiscounts: []
+      };
+    }
 
-  // Calcular subtotal sin descuentos y descuentos por producto
-  let subtotal = 0;
-  let totalDiscount = 0;
-  let itemsWithDiscounts = [];
+    let subtotal = 0;
+    let totalDiscount = 0;
+    let itemsWithDiscounts = [];
 
-  // Procesar cada item del carrito
-  cartItems.forEach(item => {
-    const itemPrice = item.product?.price || 0;
-    const quantity = item.quantity || 1;
-    const itemSubtotal = itemPrice * quantity;
-    subtotal += itemSubtotal;
+    // Procesar cada item del carrito
+    cartItems.forEach(item => {
+      const itemPrice = item.product?.price || 0;
+      const quantity = item.quantity || 1;
+      const itemSubtotal = itemPrice * quantity;
+      subtotal += itemSubtotal;
 
-    let itemDiscount = 0;
+      let itemDiscount = 0;
 
-    // Procesar descuentos para este producto
-    cart.discount.forEach(discount => {
-      if (!discount || !Array.isArray(discount.products)) return;
+      // Procesar descuentos para este producto
+      cart.discount.forEach(discount => {
+        if (!discount || !Array.isArray(discount.products)) return;
 
-      const productHasDiscount = discount.products.some(product => 
-        product?._id?.toString() === item.product?._id?.toString()
-      );
+        const productHasDiscount = discount.products.some(product => 
+          product?._id?.toString() === item.product?._id?.toString()
+        );
 
-      if (productHasDiscount) {
-        const currentDate = new Date();
-        const startDate = new Date(discount.start_date);
-        const endDate = new Date(discount.end_date);
-        
-        if (startDate <= currentDate && endDate >= currentDate) {
-          itemDiscount += itemSubtotal * (discount.percentage / 100);
+        if (productHasDiscount) {
+          const currentDate = new Date();
+          const startDate = new Date(discount.start_date);
+          const endDate = new Date(discount.end_date);
+          
+          if (startDate <= currentDate && endDate >= currentDate) {
+            itemDiscount += itemSubtotal * (discount.percentage / 100);
+          }
         }
+      });
+
+      totalDiscount += itemDiscount;
+      itemsWithDiscounts.push({
+        ...item,
+        itemDiscount,
+        finalPrice: itemSubtotal - itemDiscount
+      });
+    });
+
+    const discountedSubtotal = subtotal - totalDiscount;
+    const paymentFee = paymentMethod === 'credit' ? discountedSubtotal * 0.03 : 0;
+
+    // Inicializar todos los impuestos posibles con 0
+    const taxesByAliquot = {};
+    availableAliquots.forEach(aliquot => {
+      taxesByAliquot[`${aliquot.percentage}%`] = 0;
+    });
+
+    // Calcular impuestos solo para los productos que los tienen
+    itemsWithDiscounts.forEach(item => {
+      const productAliquot = item.product?.aliquots;
+      if (productAliquot) {
+        const aliquotKey = `${productAliquot.percentage}%`;
+        const taxAmount = (item.finalPrice * exchangeRates.USD * (productAliquot.percentage / 100));
+        taxesByAliquot[aliquotKey] = (taxesByAliquot[aliquotKey] || 0) + taxAmount;
       }
     });
 
-    totalDiscount += itemDiscount;
-    itemsWithDiscounts.push({
-      ...item,
-      itemDiscount,
-      finalPrice: itemSubtotal - itemDiscount
-    });
-  });
+    const totals = {
+      USD: discountedSubtotal + paymentFee,
+      VES: (discountedSubtotal + paymentFee) * exchangeRates.USD + 
+           Object.values(taxesByAliquot).reduce((sum, tax) => sum + tax, 0)
+    };
 
-  // Resto del cálculo permanece igual...
-  const discountedSubtotal = subtotal - totalDiscount;
-  const paymentFee = paymentMethod === 'credit' ? discountedSubtotal * 0.03 : 0;
-
-  const taxesByAliquot = {};
-  availableAliquots.forEach(aliquot => {
-    taxesByAliquot[`${aliquot.percentage}%`] = 0;
-  });
-
-  itemsWithDiscounts.forEach(item => {
-    const aliquotRate = (item.product?.aliquots?.percentage || 0) / 100; 
-    const taxKey = `${aliquotRate * 100}%`;
-    taxesByAliquot[taxKey] += (item.finalPrice * exchangeRates.USD * aliquotRate);
-  });
-
-  const totals = {
-    USD: discountedSubtotal + paymentFee,
-    EUR: (discountedSubtotal + paymentFee) * (1 / exchangeRates.EUR),
-    VES: (discountedSubtotal + paymentFee) * exchangeRates.USD + 
-         Object.values(taxesByAliquot).reduce((sum, tax) => sum + tax, 0)
+    return {
+      subtotal,
+      discountAmount: totalDiscount,
+      discountedSubtotal,
+      taxesByAliquot,
+      paymentFee,
+      totals,
+      itemsWithDiscounts
+    };
   };
 
-  return {
-    subtotal,
-    discountAmount: totalDiscount,
-    discountedSubtotal,
-    taxesByAliquot,
-    paymentFee,
-    totals,
-    itemsWithDiscounts
-  };
-};
-
-    // Actualizar la desestructuración para usar taxesByAliquot en lugar de taxesVES
-    const {  subtotal, discountAmount, discountedSubtotal, taxesByAliquot, paymentFee, totals,itemsWithDiscounts } = calculateTotals();
-
+  const { subtotal, discountAmount, discountedSubtotal, taxesByAliquot, paymentFee, totals, itemsWithDiscounts } = calculateTotals();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -276,7 +293,7 @@ useEffect(() => {
     
     try {
       const orderData = {
-        cartId: cartItems[0]?.cartId, // Asumiendo que todos los items tienen el mismo cartId
+        cartId: cartItems[0]?.cartId,
         paymentMethod: paymentMethod === 'credit' ? 'credit_card_usd' : 'cash',
         shippingAddress: {
           address: formData.address,
@@ -298,7 +315,6 @@ useEffect(() => {
         }
       });
 
-      // Limpiar carrito después de orden exitosa
       await axios.delete('/api/cart/clear', {
         headers: {
           'Authorization': `Bearer ${auth?.token || ''}`,
@@ -537,7 +553,6 @@ useEffect(() => {
 
                 <Divider mb={4} />
 
-                {/* Botón para expandir/colapsar el desglose de factura */}
                 <Flex justify="space-between" align="center" mb={4}>
                   <Text fontWeight="bold">Desglose de Factura</Text>
                   <IconButton
@@ -547,15 +562,12 @@ useEffect(() => {
                     aria-label={isInvoiceOpen ? 'Ocultar detalles' : 'Mostrar detalles'}
                   />
                 </Flex>
-                {/* Desglose detallado de la factura */}
+
                 <Collapse in={isInvoiceOpen} animateOpacity>
                   <Stack spacing={3} mb={4} p={3} bg="gray.50" borderRadius="md">
                     <SimpleGrid columns={2} spacing={2}>
                       <Text fontWeight="medium">Tasa USD:</Text>
-                      <Text textAlign="right">1 USD = {exchangeRates.USD} VES</Text>
-                      
-                      {/* <Text fontWeight="medium">Tasa EUR:</Text>
-                      <Text textAlign="right">1 EUR = {exchangeRates.EUR} VES</Text> */}
+                      <Text textAlign="right">1 USD = {formatCurrency(exchangeRates.USD, 'VES')}</Text>
                       
                       <Text fontWeight="medium">Actualizado:</Text>                      
                       <Text textAlign="right">
@@ -586,73 +598,37 @@ useEffect(() => {
                     </Flex>
 
                     <Divider my={2} />
-                      {/* mostrando el valor del producto con el precio de la alicuota*/}
-                    {/* {Object.entries(taxesByAliquot).map(([aliquot, amount]) => (
-                      amount > 0 && ( // Solo mostrar si hay monto para esta alícuota
-                        <Flex key={aliquot.code} justify="space-between">
-                          <Text>IVA ({aliquot}):</Text>
-                          <Text>{formatCurrency(amount, 'VES')}</Text>
-                        </Flex>
-                      )
-                    ))} */}
-                    
-                    {availableAliquots
-                        // .filter((aliquot, index, self) => 
-                        //   self.findIndex(a => a.percentage === aliquot.percentage) === index
-                        // )
-                        .map(aliquot => {
-                          const aliquotKey = `${aliquot.percentage}% de ${aliquot.code}`;
-                          const taxAmount = taxesByAliquot[aliquotKey] || 0;
-                          
-                          return (
-                            <Flex key={aliquotKey} justify="space-between">
-                              <Text>IVA ({aliquotKey}):</Text>
-                              <Text>{formatCurrency(taxAmount, 'VES')}</Text>
-                            </Flex>
-                          );
-                        })
-                      }
-                    <Divider my={2} />
-                    {discountAmount > 0 && (
-                        <>
-                          <Divider my={2} />
-                          <Flex justify="space-between">
-                            <Text fontWeight="bold">Descuentos aplicados:</Text>
-                            <Text color="green.500" fontWeight="bold">-{formatCurrency(discountAmount, 'USD')}</Text>
-                          </Flex>
-                          
-                          {/* Opcional: Mostrar descuentos por producto */}
-                          {/* {itemsWithDiscounts.filter(item => item.itemDiscount > 0).map((item, index) => (
-                            <Flex key={index} justify="space-between" pl={4}>
-                              <Text fontSize="sm">{item.product.name} ({item.quantity}x):</Text>
-                              <Text fontSize="sm" color="green.500">-{formatCurrency(item.itemDiscount, 'USD')}</Text>
-                            </Flex>
-                          ))} */}
-                          
-                          <Divider my={2} />
-                          <Flex justify="space-between">
-                            <Text>Subtotal con descuentos:</Text>
-                            <Text fontWeight="bold">{formatCurrency(discountedSubtotal, 'USD')}</Text>
-                          </Flex>
-                        </>
-                      )}
 
-                    {/* <SimpleGrid columns={2} spacing={2}>
-                      <Text fontWeight="bold">Total en USD:</Text>
-                      <Text fontWeight="bold" textAlign="right">
-                        {formatCurrency(totals.USD, 'USD')}
-                      </Text>
+                    {/* Mostrar todos los tipos de IVA disponibles, incluso los que están en 0 */}
+                    {availableAliquots.map(aliquot => {
+                      const aliquotKey = `${aliquot.percentage}%`;
+                      const taxAmount = taxesByAliquot[aliquotKey] || 0;
                       
-                      <Text fontWeight="bold">Total en EUR:</Text>
-                      <Text fontWeight="bold" textAlign="right">
-                        {formatCurrency(totals.EUR, 'EUR')}
-                      </Text>
-                      
-                      <Text fontWeight="bold">Total en VES:</Text>
-                      <Text fontWeight="bold" textAlign="right">
-                        {formatCurrency(totals.VES, 'VES')}
-                      </Text>
-                    </SimpleGrid> */}
+                      return (
+                        <Flex key={aliquot._id} justify="space-between">
+                          <Text>IVA ({aliquotKey}):</Text>
+                          <Text>{formatCurrency(taxAmount, 'VES')}</Text>
+                        </Flex>
+                      );
+                    })}
+
+                    <Divider my={2} />
+                    
+                    {discountAmount > 0 && (
+                      <>
+                        <Divider my={2} />
+                        <Flex justify="space-between">
+                          <Text fontWeight="bold">Descuentos aplicados:</Text>
+                          <Text color="green.500" fontWeight="bold">-{formatCurrency(discountAmount, 'USD')}</Text>
+                        </Flex>
+                        
+                        <Divider my={2} />
+                        <Flex justify="space-between">
+                          <Text>Subtotal con descuentos:</Text>
+                          <Text fontWeight="bold">{formatCurrency(discountedSubtotal, 'USD')}</Text>
+                        </Flex>
+                      </>
+                    )}
                   </Stack>
                 </Collapse>
 
