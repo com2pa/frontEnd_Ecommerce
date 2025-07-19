@@ -43,6 +43,7 @@ import { useLocation, useNavigate } from 'react-router-dom';
 import { useAuth } from '../hooks/useAuth';
 import socketIOClient from 'socket.io-client';
 import { motion, AnimatePresence } from 'framer-motion';
+import Tasa from '../pages/Facture/Tasa';
 // Definir los elementos de navegación
 const NAV_ITEMS = [
   { href: '/', label: 'Home' },
@@ -256,8 +257,7 @@ export default function Navbar() {
             fontWeight="bold"
             fontSize="xl">
             MiTienda
-          </Text>
-
+          </Text>           
           <Flex display={{ base: 'none', md: 'flex' }} ml={10}>
             <Stack direction={'row'} spacing={4}>
               {NAV_ITEMS.filter(item => ['/', '/descuento', '/contactame'].includes(item.href)).map((navItem) => (
@@ -275,6 +275,14 @@ export default function Navbar() {
             </Stack>
           </Flex>
         </Flex>
+         <Box 
+            display={{ base: 'none', md: 'block' }}
+            position="absolute"
+            left="50%"
+            transform="translateX(-50%)"
+          >
+            <Tasa />
+          </Box>
 
         {/* Acciones de usuario */}
         <Stack
