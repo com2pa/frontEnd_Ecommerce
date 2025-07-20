@@ -203,6 +203,8 @@ const Payment = () => {
         discountAmount: 0,
         discountedSubtotal: 0,
         taxesByAliquot: {},
+        totalIvaUSD: 0, 
+        totalIvaVES: 0, 
         paymentFee: 0,
         totals: { USD: 0, EUR: 0, VES: 0 },
         itemsWithDiscounts: []
@@ -253,25 +255,38 @@ const Payment = () => {
     const paymentFee = paymentMethod === 'credit' ? discountedSubtotal * 0.03 : 0;
 
     // Inicializar todos los impuestos posibles con 0
-    const taxesByAliquot = {};
-    availableAliquots.forEach(aliquot => {
-      taxesByAliquot[`${aliquot.percentage}%`] = 0;
-    });
+     const taxesByAliquot = {};
+      availableAliquots.forEach(aliquot => {
+        taxesByAliquot[`${aliquot.percentage}%`] = {
+          usd: 0,
+          ves: 0
+        };
+      });
 
-    // Calcular impuestos solo para los productos que los tienen
+    // Calcular impuestos sobre el precio ORIGINAL (sin descuentos)
     itemsWithDiscounts.forEach(item => {
       const productAliquot = item.product?.aliquots;
       if (productAliquot) {
         const aliquotKey = `${productAliquot.percentage}%`;
-        const taxAmount = (item.finalPrice * exchangeRates.USD * (productAliquot.percentage / 100));
-        taxesByAliquot[aliquotKey] = (taxesByAliquot[aliquotKey] || 0) + taxAmount;
+        // Precio ORIGINAL (itemSubtotal) × porcentaje de alícuota
+        const taxAmountUSD = (item.product.price * item.quantity) * (productAliquot.percentage / 100);
+        const taxAmountVES = taxAmountUSD * exchangeRates.USD;
+        
+        taxesByAliquot[aliquotKey].usd += taxAmountUSD;
+        taxesByAliquot[aliquotKey].ves += taxAmountVES;
       }
     });
-
+    // Calcular total de IVA en USD y VES
+    let totalIvaUSD = 0;
+    let totalIvaVES = 0;
+    Object.values(taxesByAliquot).forEach(tax => {
+    totalIvaUSD += tax.usd;
+    totalIvaVES += tax.ves;
+  });
+    // Totales FINALES (subtotal + comisión + IVA)
     const totals = {
-      USD: discountedSubtotal + paymentFee,
-      VES: (discountedSubtotal + paymentFee) * exchangeRates.USD + 
-           Object.values(taxesByAliquot).reduce((sum, tax) => sum + tax, 0)
+      USD: discountedSubtotal + paymentFee + totalIvaUSD, // IVA incluido
+      VES: (discountedSubtotal + paymentFee) * exchangeRates.USD + totalIvaVES
     };
 
     return {
@@ -279,13 +294,25 @@ const Payment = () => {
       discountAmount: totalDiscount,
       discountedSubtotal,
       taxesByAliquot,
+      totalIvaUSD,
+      totalIvaVES,
       paymentFee,
       totals,
       itemsWithDiscounts
     };
   };
 
-  const { subtotal, discountAmount, discountedSubtotal, taxesByAliquot, paymentFee, totals, itemsWithDiscounts } = calculateTotals();
+  const { 
+    subtotal, 
+    discountAmount, 
+    discountedSubtotal, 
+    taxesByAliquot, 
+    totalIvaUSD, 
+    totalIvaVES, 
+    paymentFee, 
+    totals, 
+    itemsWithDiscounts 
+} = calculateTotals();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -602,18 +629,24 @@ const Payment = () => {
                     {/* Mostrar todos los tipos de IVA disponibles, incluso los que están en 0 */}
                     {availableAliquots.map(aliquot => {
                       const aliquotKey = `${aliquot.percentage}%`;
-                      const taxAmount = taxesByAliquot[aliquotKey] || 0;
+                      const taxAmount = taxesByAliquot[aliquotKey] || { usd: 0, ves: 0 };
                       
                       return (
                         <Flex key={aliquot._id} justify="space-between">
                           <Text>IVA ({aliquotKey}):</Text>
-                          <Text>{formatCurrency(taxAmount, 'VES')}</Text>
+                          <Text>{formatCurrency(taxAmount.usd, 'USD')}</Text>
+                          <Text>{formatCurrency(taxAmount.ves, 'VES')}</Text>
                         </Flex>
                       );
                     })}
 
                     <Divider my={2} />
-                    
+                    {/* Total de IVA */}
+                    <Flex justify="space-between" fontWeight="bold">
+                      <Text>Total IVA:</Text>
+                      <Text>{formatCurrency(totalIvaUSD, 'USD')}</Text>
+                      <Text>{formatCurrency(totalIvaVES, 'VES')}</Text>
+                    </Flex>
                     {discountAmount > 0 && (
                       <>
                         <Divider my={2} />
