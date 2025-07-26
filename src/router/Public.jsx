@@ -10,6 +10,8 @@ import Productos from '../pages/Home/Productos';
 import DetalleProducto from '../pages/Home/DetalleProducto';
 import ContactPage from '../pages/Contact';
 import Ofertas from '../pages/Ofertas';
+import Tasa from '../pages/Facture/Tasa';
+import InvoiceView from '../pages/Facture/Fact';
 
 
 export const Public = () => {
@@ -26,7 +28,10 @@ export const Public = () => {
         <Route path='/productos/:id' element={<DetalleProducto />} />
         <Route path='/descuento' element={<Ofertas/>}/>
         <Route path='/contactame' element={<ContactPage/>}/> 
-               
+        {/* prueba de tasa */}
+        <Route path='/pruebatasa' element={<Tasa/>} />
+        {/* previsualizacio de factura */}
+        <Route path="/view/:id" element={<InvoiceView/>}/>
       </Routes>
     </>
   );
