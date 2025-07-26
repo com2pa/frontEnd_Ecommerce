@@ -320,7 +320,7 @@ const Payment = () => {
     
     try {
       const orderData = {
-        cartId: cartItems[0]?.cartId,
+         cartId: cart._id,
         paymentMethod: paymentMethod === 'credit' ? 'credit_card_usd' : 'cash',
         shippingAddress: {
           address: formData.address,
@@ -356,7 +356,7 @@ const Payment = () => {
         isClosable: true,
       });
 
-      navigate(`/order/${response.data.order._id}`);
+      navigate(`/view/${response.data.order._id}`);
     } catch (err) {
       console.error('Error creating order:', err);
       toast({
