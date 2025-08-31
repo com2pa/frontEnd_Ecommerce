@@ -75,7 +75,7 @@ const Menu = () => {
       }
     };
     getMenus();
-  }, []);
+  }, [toast]);
 
   // Crear nuevo menú
   // Ejemplo de cómo llamar a la API desde React
@@ -86,7 +86,7 @@ const Menu = () => {
             const token = localStorage.getItem('token');
             const { data } = await axios.post('/api/menu', 
                 { 
-                    name: 'Nombre del Menú', 
+                    name, 
                     roles: ['admin', 'user'] // Asegúrate de enviar los roles
                 },
                 {
