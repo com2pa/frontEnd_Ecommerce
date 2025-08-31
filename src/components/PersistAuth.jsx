@@ -45,14 +45,21 @@ const PersistAuth = () => {
     );
   }
 
+  // Definir roles que pueden acceder al dashboard
+  const dashboardRoles = ['admin', 'superadmin', 'viewer', 'editor', 'auditor'];
+  
   // Redirecciones según el rol
   if (auth?.token) {
-    if (auth.role === 'admin' && location.pathname.startsWith('/client')) {
-      return <Navigate to="/dashboard" replace />;
-    }
-    if (auth.role === 'user' && location.pathname.startsWith('/dashboard')) {
+    // Si el usuario tiene un rol que NO puede acceder al dashboard y está intentando acceder al dashboard
+    if (!dashboardRoles.includes(auth.role) && location.pathname.startsWith('/dashboard')) {
       return <Navigate to="/client" replace />;
     }
+    
+    // Si el usuario tiene un rol que puede acceder al dashboard y está intentando acceder a rutas de cliente
+    if (dashboardRoles.includes(auth.role) && location.pathname.startsWith('/client')) {
+      return <Navigate to="/dashboard" replace />;
+    }
+    
     return <Outlet />;
   } else {
     return <Outlet />; // Permitir acceso a rutas públicas sin redirección
