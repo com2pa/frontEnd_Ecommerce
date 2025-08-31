@@ -46,7 +46,8 @@ const LinkItems = [
   { name: 'Descuento',icon:TbBasketDiscount ,to:'/discount'},
   { name: 'Tasa', icon:FaDollarSign, to:'/tasa'},
   { name:'Roles de usuaro',icon:FaUsers,to:'/role-user'},
-  { name:'conectados',icon:FaUserCheck ,to:'/conectados'}
+  { name:'conectados',icon:FaUserCheck ,to:'/conectados'},
+  { name:'Menu',to:'/menu'}
 ];
 
 const SidebarContent = ({ onClose, ...rest }) => {
